@@ -1,4 +1,5 @@
-import {Component, ElementRef, ViewChild, AfterViewInit, OnInit} from '@angular/core';
+import {Component, ElementRef, ViewChild, AfterViewInit, OnInit, Inject} from '@angular/core';
+import {DOCUMENT} from '@angular/common';
 // import './css/styles.css';
 import debounce from 'lodash/debounce';
 import keyBy from 'lodash/keyBy';
@@ -53,11 +54,12 @@ import {
   styleUrls: ['./app.component.css'],
 })
 export class AppComponent implements OnInit, AfterViewInit {
-  @ViewChild('popup', {static: false}) popupEl: ElementRef;
+  // @ViewChild('popup', {static: false}) popupEl: ElementRef;
   title = 'ng-eow';
   map: Map;
+  popup: any;
 
-  constructor() {
+  constructor(@Inject(DOCUMENT) private document: Document) {
   }
 
   ngAfterViewInit() {
@@ -114,8 +116,9 @@ export class AppComponent implements OnInit, AfterViewInit {
       }
     }
 
-    const popup = new Overlay({
+    this.popup = new Overlay({
       // element: this.popupEl.nativeElement,  // document.getElementById('popup'),
+      // element: this.document.getElementById('popup'),
       element: document.getElementById('popup'),
       position: [0, 0],
       autoPan: true,
@@ -157,8 +160,8 @@ export class AppComponent implements OnInit, AfterViewInit {
                                        target
                                      }) => {
       // Populate datalayer
-      // TODO - update
-      // document.querySelector('.sub-header-stats').innerHTML = printStats(calculateStats(target.getSource().getFeatures()), userStore);
+      const element = this.document.querySelector('.sub-header-stats') as HTMLElement;
+      element.innerHTML = printStats(calculateStats(target.getSource().getFeatures()), userStore);
     }, 200));
 
     this.map = new Map({
@@ -225,8 +228,8 @@ export class AppComponent implements OnInit, AfterViewInit {
     }
 
 // Attach overlay and hide it
-    this.map.addOverlay(popup);
-    popup.setVisible(false);
+    this.map.addOverlay(this.popup);
+    this.popup.setVisible(false);
 
 // // add some events
 //     popup.getElement().addEventListener('click', (event) => {
@@ -246,56 +249,56 @@ export class AppComponent implements OnInit, AfterViewInit {
       clearFilter();
     });
 
-/*
-    document.querySelectorAll('.pull-tab').forEach(i => i.addEventListener('click', (event: Event) => {
-      const element = event.target.closest('.panel');
-      element.classList.toggle('pulled');
-    }));
+    /*
+        document.querySelectorAll('.pull-tab').forEach(i => i.addEventListener('click', (event: Event) => {
+          const element = event.target.closest('.panel');
+          element.classList.toggle('pulled');
+        }));
 
-    document.querySelector('.user-list').addEventListener('click', (event) => {
-      const element = event.target.closest('.item');
-      const userId = element.getAttribute('data-user');
+        document.querySelector('.user-list').addEventListener('click', (event) => {
+          const element = event.target.closest('.item');
+          const userId = element.getAttribute('data-user');
 
-      if (showMeasurements(userId)) {
-        clearSelectedUser();
-        element.classList.add('selectedUser', 'box-shadow');
-        toggleFilterButton(true);
-      }
-    }, true);
+          if (showMeasurements(userId)) {
+            clearSelectedUser();
+            element.classList.add('selectedUser', 'box-shadow');
+            toggleFilterButton(true);
+          }
+        }, true);
 
-    document.querySelector('.measurement-list').addEventListener('click', (event) => {
-      const element = event.target.closest('.item');
-      if (!element) {
-        return;
-      }
+        document.querySelector('.measurement-list').addEventListener('click', (event) => {
+          const element = event.target.closest('.item');
+          if (!element) {
+            return;
+          }
 
-      const coordinate = element.getAttribute('data-coordinate').split(',');
-      const id = element.getAttribute('data-key');
-      const view = map.getView();
-      view.cancelAnimations();
-      view.animate({
-        center: coordinate,
-        zoom: 7,
-        duration: 1300
-      });
-      // clean up old popup and initilize some variables
-      popup.setVisible(false);
-      const popupElement = popup.getElement();
-      const content = popupElement.querySelector('.content');
-      const stats = popupElement.querySelector('.stats');
-      content.innerHTML = '';
-      popupElement.classList.remove('active');
+          const coordinate = element.getAttribute('data-coordinate').split(',');
+          const id = element.getAttribute('data-key');
+          const view = map.getView();
+          view.cancelAnimations();
+          view.animate({
+            center: coordinate,
+            zoom: 7,
+            duration: 1300
+          });
+          // clean up old popup and initilize some variables
+          popup.setVisible(false);
+          const popupElement = popup.getElement();
+          const content = popupElement.querySelector('.content');
+          const stats = popupElement.querySelector('.stats');
+          content.innerHTML = '';
+          popupElement.classList.remove('active');
 
-      const features = [measurementStore.getById(id)];
+          const features = [measurementStore.getById(id)];
 
-      if (features.length) {
-        content.innerHTML = features.map(printDetails).join('');
-        stats.innerHTML = printStats(calculateStats(features), userStore);
-        popupElement.classList.add('active');
+          if (features.length) {
+            content.innerHTML = features.map(printDetails).join('');
+            stats.innerHTML = printStats(calculateStats(features), userStore);
+            popupElement.classList.add('active');
 
-        popup.setPosition(coordinate);
-      }
-    }, true);*/
+            popup.setPosition(coordinate);
+          }
+        }, true);*/
 
 // Show popup with features at certain point on the map
     this.map.on('click', (evt) => {
@@ -305,8 +308,8 @@ export class AppComponent implements OnInit, AfterViewInit {
       } = evt;
 
       // clean up old popup and initilize some variables
-      popup.setVisible(false);
-      const element = popup.getElement();
+      this.popup.setVisible(false);
+      const element = this.popup.getElement();
       const content = element.querySelector('.content');
       const stats = element.querySelector('.stats');
       content.innerHTML = '';
@@ -322,7 +325,7 @@ export class AppComponent implements OnInit, AfterViewInit {
         content.innerHTML = features.map(printDetails).join('');
         stats.innerHTML = printStats(calculateStats(features), userStore);
         element.classList.add('active');
-        popup.setPosition(coordinate);
+        this.popup.setPosition(coordinate);
       }
     });
 // Load users
@@ -331,15 +334,39 @@ export class AppComponent implements OnInit, AfterViewInit {
       userStore.userById = keyBy(userStore.users, 'id');
       renderUsers(userStore.users);
     });
+
+    this.setupEventHandlers();
+  }
+
+  setupEventHandlers() {
+    // Pull tabs of Most Active Users and Recent Measurements
+    this.document.querySelectorAll('.pull-tab').forEach(i => i.addEventListener('click', (event: Event) => {
+      const element = (event.target as HTMLElement).closest('.panel');
+      element.classList.toggle('pulled');
+    }));
+
+    // Popup dialog close button
+    this.document.querySelector('#popup').addEventListener('click', (event: Event) => {
+      const element = (event.target as HTMLElement);
+      if (element.matches('.close')) {
+        this.popup.setVisible(false);
+        this.popup.getElement().classList.remove('active');
+        console.log('close it');
+      } else {
+        console.log('dont close it');
+      }
+    });
   }
 
   // add some events
- onClickPopup(event: any) {
-    // const popupEl = document.getElementById('popup');
+  onClickPopup(event: any) {
     if (event.target.matches('.close')) {
-      this.popupEl.nativeElement.setVisible(false);
+      this.popup.setVisible(false);
+      this.popup.getElement().classList.remove('active');
+
+      // this.popupEl.nativeElement.setVisible(false);
       // TODO - there exists an NG way of doing this
-      this.popupEl.nativeElement.getElement().classList.remove('active');
+      // this.popupEl.nativeElement.getElement().classList.remove('active');
     }
 
     if (event.target.matches('.more-info-btn')) {
