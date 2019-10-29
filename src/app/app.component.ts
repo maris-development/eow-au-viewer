@@ -58,6 +58,10 @@ export class AppComponent implements OnInit, AfterViewInit {
   title = 'ng-eow';
   map: Map;
   popup: any;
+  measurementStore: any;
+  userStore: any;
+  dataLayer: any;
+  allDataSource: any;
 
   constructor(@Inject(DOCUMENT) private document: Document) {
   }
@@ -74,20 +78,20 @@ export class AppComponent implements OnInit, AfterViewInit {
     const USER_SERVICE = 'https://www.eyeonwater.org/api/users';
     const styleCache = {};
     // this.map = null;
-    const allDataSource = new VectorSource({
+    this.allDataSource = new VectorSource({
       format: new GeoJSON(),
       url: WFS_URL
     });
 
 // Fast datastructures to query the data
-    const userStore = {
+    this.userStore = {
       users: [],
       userById: {},
       getUserById(userId) {
         return this.userById[userId] || [];
       }
     };
-    const measurementStore = {
+    this.measurementStore = {
       measurements: [],
       measurementsById: {},
       measurementsByOwner: {},
@@ -100,26 +104,12 @@ export class AppComponent implements OnInit, AfterViewInit {
 
     };
 // Get measurements from layer after it's done loading.
-    allDataSource.on('change', initialLoadMeasurements);
-
-    function initialLoadMeasurements(event) {
-      const source = event.target;
-      if (!source.loading) {
-        const features = allDataSource.getFeatures();
-        // Store the measurements in easy to access data structure
-        measurementStore.measurements = features;
-        measurementStore.measurementsById = keyBy(features, f => f.get('n_code'));
-        measurementStore.measurementsByOwner = groupBy(features, f => f.get('user_n_code'));
-
-        recentMeasurements(measurementStore.measurements);
-        allDataSource.un('change', initialLoadMeasurements);
-      }
-    }
+    this.allDataSource.on('change', this.initialLoadMeasurements.bind(this));
 
     this.popup = new Overlay({
       // element: this.popupEl.nativeElement,  // document.getElementById('popup'),
       // element: this.document.getElementById('popup'),
-      element: document.getElementById('popup'),
+      element: this.document.getElementById('popup'),
       position: [0, 0],
       autoPan: true,
       autoPanMargin: 275,
@@ -151,17 +141,17 @@ export class AppComponent implements OnInit, AfterViewInit {
       return styleCache[styleKey];
     };
 
-    const dataLayer = new VectorLayer({
-      source: allDataSource,
+    this.dataLayer = new VectorLayer({
+      source: this.allDataSource,
       style: basicStyle
     });
 
-    dataLayer.on('change', debounce(({
+    this.dataLayer.on('change', debounce(({
                                        target
                                      }) => {
       // Populate datalayer
       const element = this.document.querySelector('.sub-header-stats') as HTMLElement;
-      element.innerHTML = printStats(calculateStats(target.getSource().getFeatures()), userStore);
+      element.innerHTML = printStats(calculateStats(target.getSource().getFeatures()), this.userStore);
     }, 200));
 
     this.map = new Map({
@@ -170,7 +160,7 @@ export class AppComponent implements OnInit, AfterViewInit {
         new TileLayer({
           source: new OSM()
         }),
-        dataLayer
+        this.dataLayer
       ],
       view: new View({
         center: fromLonLat([133.07421121913038, 28.566680043403878]),
@@ -180,6 +170,7 @@ export class AppComponent implements OnInit, AfterViewInit {
     });
 
     async function loadUsers() {
+      // TODO I'm curious as to if this is correct under Angular
       const response = await window.fetch(USER_SERVICE);
       const {
         results: {
@@ -189,116 +180,14 @@ export class AppComponent implements OnInit, AfterViewInit {
       return users;
     }
 
-    function clearFilter() {
-      dataLayer.setSource(allDataSource);
-      clearSelectedUser();
-      recentMeasurements(measurementStore.measurements);
-      this.map.getView().fit(dataLayer.getSource().getExtent(), {duration: 1300});
-      toggleFilterButton(false);
-    }
-
-    function showMeasurements(userId = null) {
-      const newSource = new VectorSource();
-      const selection = measurementStore.getByOwner(userId);
-      if (!selection.length) {
-        return false;
-      }
-      newSource.addFeatures(selection);
-
-      this.map.getView().fit(newSource.getExtent(), {
-        size: this.map.getSize(),
-        padding: [100, 100, 100, 100],
-        nearest: false,
-        duration: 1300
-      });
-      dataLayer.setSource(newSource);
-      recentMeasurements(selection);
-      return true;
-    }
-
-    function toggleFilterButton(state = false) {
-      const element = document.getElementById('clearFilterButton');
-      element.classList.toggle('hidden', !state);
-    }
-
-    function clearSelectedUser() {
-      document.querySelectorAll('.user-list .item').forEach(item => {
-        item.classList.remove('selectedUser', 'box-shadow');
-      });
-    }
-
 // Attach overlay and hide it
     this.map.addOverlay(this.popup);
     this.popup.setVisible(false);
 
-// // add some events
-//     popup.getElement().addEventListener('click', (event) => {
-//       if (event.target.matches('.close')) {
-//         popup.setVisible(false);
-//         popup.getElement().classList.remove('active');
-//       }
-//
-//       if (event.target.matches('.more-info-btn')) {
-//         const element = event.target.closest('.popup-item');
-//         element.classList.toggle('active');
-//       }
-//     }, false);
-//
 // Click events for panels
-    document.getElementById('clearFilterButton').addEventListener('click', (event) => {
-      clearFilter();
+    this.document.getElementById('clearFilterButton').addEventListener('click', (event) => {
+      this.clearFilter();
     });
-
-    /*
-        document.querySelectorAll('.pull-tab').forEach(i => i.addEventListener('click', (event: Event) => {
-          const element = event.target.closest('.panel');
-          element.classList.toggle('pulled');
-        }));
-
-        document.querySelector('.user-list').addEventListener('click', (event) => {
-          const element = event.target.closest('.item');
-          const userId = element.getAttribute('data-user');
-
-          if (showMeasurements(userId)) {
-            clearSelectedUser();
-            element.classList.add('selectedUser', 'box-shadow');
-            toggleFilterButton(true);
-          }
-        }, true);
-
-        document.querySelector('.measurement-list').addEventListener('click', (event) => {
-          const element = event.target.closest('.item');
-          if (!element) {
-            return;
-          }
-
-          const coordinate = element.getAttribute('data-coordinate').split(',');
-          const id = element.getAttribute('data-key');
-          const view = map.getView();
-          view.cancelAnimations();
-          view.animate({
-            center: coordinate,
-            zoom: 7,
-            duration: 1300
-          });
-          // clean up old popup and initilize some variables
-          popup.setVisible(false);
-          const popupElement = popup.getElement();
-          const content = popupElement.querySelector('.content');
-          const stats = popupElement.querySelector('.stats');
-          content.innerHTML = '';
-          popupElement.classList.remove('active');
-
-          const features = [measurementStore.getById(id)];
-
-          if (features.length) {
-            content.innerHTML = features.map(printDetails).join('');
-            stats.innerHTML = printStats(calculateStats(features), userStore);
-            popupElement.classList.add('active');
-
-            popup.setPosition(coordinate);
-          }
-        }, true);*/
 
 // Show popup with features at certain point on the map
     this.map.on('click', (evt) => {
@@ -323,16 +212,16 @@ export class AppComponent implements OnInit, AfterViewInit {
 
       if (features.length) {
         content.innerHTML = features.map(printDetails).join('');
-        stats.innerHTML = printStats(calculateStats(features), userStore);
+        stats.innerHTML = printStats(calculateStats(features), this.userStore);
         element.classList.add('active');
         this.popup.setPosition(coordinate);
       }
     });
 // Load users
     loadUsers().then((users) => {
-      userStore.users = users;
-      userStore.userById = keyBy(userStore.users, 'id');
-      renderUsers(userStore.users);
+      this.userStore.users = users;
+      this.userStore.userById = keyBy(this.userStore.users, 'id');
+      renderUsers(this.userStore.users);
     });
 
     this.setupEventHandlers();
@@ -351,27 +240,109 @@ export class AppComponent implements OnInit, AfterViewInit {
       if (element.matches('.close')) {
         this.popup.setVisible(false);
         this.popup.getElement().classList.remove('active');
-        console.log('close it');
-      } else {
-        console.log('dont close it');
+      } else if (element.matches('.more-info-btn')) {
+        const popupElement = element.closest('.popup-item');
+        popupElement.classList.toggle('active');
       }
     });
+
+    // User List
+    document.querySelector('.user-list').addEventListener('click', (event) => {
+      const element = (event.target as HTMLElement).closest('.item');
+      const userId = element.getAttribute('data-user');
+
+      if (this.showMeasurements(userId)) {
+        this.clearSelectedUser();
+        element.classList.add('selectedUser', 'box-shadow');
+        this.toggleFilterButton(true);
+      }
+    }, true);
+
+    // Measurement List
+    document.querySelector('.measurement-list').addEventListener('click', (event) => {
+      const element = (event.target as HTMLElement).closest('.item');
+      if (!element) {
+        return;
+      }
+
+      const coordinate = element.getAttribute('data-coordinate').split(',');
+      const id = element.getAttribute('data-key');
+      const view = this.map.getView();
+      view.cancelAnimations();
+      view.animate({
+        center: coordinate,
+        zoom: 7,
+        duration: 1300
+      });
+      // clean up old popup and initilize some variables
+      this.popup.setVisible(false);
+      const popupElement = this.popup.getElement();
+      const content = popupElement.querySelector('.content');
+      const stats = popupElement.querySelector('.stats');
+      content.innerHTML = '';
+      popupElement.classList.remove('active');
+
+      const features = [this.measurementStore.getById(id)];
+
+      if (features.length) {
+        content.innerHTML = features.map(printDetails).join('');
+        stats.innerHTML = printStats(calculateStats(features), this.userStore);
+        popupElement.classList.add('active');
+
+        this.popup.setPosition(coordinate);
+      }
+    }, true);
   }
 
-  // add some events
-  onClickPopup(event: any) {
-    if (event.target.matches('.close')) {
-      this.popup.setVisible(false);
-      this.popup.getElement().classList.remove('active');
+  private initialLoadMeasurements(event) {
+    const source = event.target;
+    if (!source.loading) {
+      const features = this.allDataSource.getFeatures();
+      // Store the measurements in easy to access data structure
+      this.measurementStore.measurements = features;
+      this.measurementStore.measurementsById = keyBy(features, f => f.get('n_code'));
+      this.measurementStore.measurementsByOwner = groupBy(features, f => f.get('user_n_code'));
 
-      // this.popupEl.nativeElement.setVisible(false);
-      // TODO - there exists an NG way of doing this
-      // this.popupEl.nativeElement.getElement().classList.remove('active');
+      recentMeasurements(this.measurementStore.measurements);
+      this.allDataSource.un('change', this.initialLoadMeasurements);
+    }
+  }
+
+
+  private showMeasurements(userId = null) {
+      const newSource = new VectorSource();
+      const selection = this.measurementStore.getByOwner(userId);
+      if (!selection.length) {
+        return false;
+      }
+      newSource.addFeatures(selection);
+      this.map.getView().fit(newSource.getExtent(), {
+        size: this.map.getSize(),
+        padding: [100, 100, 100, 100],
+        nearest: false,
+        duration: 1300
+      });
+      this.dataLayer.setSource(newSource);
+      recentMeasurements(selection);
+      return true;
     }
 
-    if (event.target.matches('.more-info-btn')) {
-      const element = event.target.closest('.popup-item');
-      element.classList.toggle('active');
-    }
+  private clearFilter() {
+    this.dataLayer.setSource(this.allDataSource);
+    this.clearSelectedUser();
+    recentMeasurements(this.measurementStore.measurements);
+    this.map.getView().fit(this.dataLayer.getSource().getExtent(), {duration: 1300});
+    this.toggleFilterButton(false);
+  }
+
+  private toggleFilterButton(state = false) {
+    const element = this.document.getElementById('clearFilterButton');
+    element.classList.toggle('hidden', !state);
+  }
+
+  private clearSelectedUser() {
+    this.document.querySelectorAll('.user-list .item').forEach(item => {
+      item.classList.remove('selectedUser', 'box-shadow');
+    });
   }
 }
