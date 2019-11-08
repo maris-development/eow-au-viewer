@@ -5,6 +5,7 @@
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build --base-href http://research.csiro.au/eyeonwater/",
+    "deploy:csiro": "./deploy_csiro.sh",
     "test": "ng test",
     "lint": "ng lint",
     "e2e": "ng e2e"
@@ -22,6 +23,7 @@
     "lodash": "^4.17.15",
     "luxon": "^1.19.3",
     "ol": "^6.0.1",
+    "rimraf": "^3.0.0",
     "rxjs": "~6.4.0",
     "tslib": "^1.10.0",
     "zone.js": "~0.9.1"
