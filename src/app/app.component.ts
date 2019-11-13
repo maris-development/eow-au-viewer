@@ -27,6 +27,8 @@ import {
   renderUsers,
   recentMeasurements
 } from './utils';
+import * as Highcharts from 'highcharts';
+import {SeriesPieOptions} from 'highcharts';
 
 @Component({
   selector: 'app-root',
@@ -335,7 +337,61 @@ export class AppComponent implements OnInit, AfterViewInit {
 
   private addPieChart(features, coordinate) {
     const el = this.pieChart.getElement();
-    el.innerHTML = 'Pie Chart';
+    // el.innerHTML = 'Pie Chart';
+    // Radialize the colors
+    Highcharts.setOptions({
+      colors: Highcharts.map(Highcharts.getOptions().colors, (color) => {
+        return {
+          radialGradient: {
+            cx: 0.5,
+            cy: 0.3,
+            r: 0.7
+          },
+          stops: [
+            [0, color],
+            [1, Highcharts.Color(color).brighten(-0.3).get('rgb')] // darken
+          ]
+        };
+      })
+    });
+
+// Build the chart
+    Highcharts.chart(el, {
+      chart: {
+        plotBackgroundColor: null,
+        plotBorderWidth: 2,
+        plotShadow: false,
+        type: 'pie'
+      },
+      title: {
+        text: 'Browser market shares in January, 2018'
+      },
+      tooltip: {
+        pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+      },
+      plotOptions: {
+        pie: {
+          allowPointSelect: true,
+          cursor: 'pointer',
+          dataLabels: {
+            enabled: true,
+            format: '<b>{point.name}</b>: {point.percentage:.1f} %',
+            connectorColor: 'brown'
+          }
+        }
+      },
+      series: [{
+        name: 'Share',
+        data: [
+          { name: 'Chrome', y: 61.41 },
+          { name: 'Internet Explorer', y: 11.84 },
+          { name: 'Firefox', y: 10.85 },
+          { name: 'Edge', y: 4.67 },
+          { name: 'Safari', y: 4.18 },
+          { name: 'Other', y: 7.05 }
+        ]
+      } as SeriesPieOptions]
+    });
     this.pieChart.setPosition(coordinate);
     this.pieChart.setVisible(true);
   }
