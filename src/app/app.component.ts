@@ -62,6 +62,7 @@ export class AppComponent implements OnInit, AfterViewInit {
   userStore: any;
   dataLayer: any;
   allDataSource: any;
+  pieChart: any;
 
   constructor(@Inject(DOCUMENT) private document: Document) {
   }
@@ -116,6 +117,14 @@ export class AppComponent implements OnInit, AfterViewInit {
       positioning: 'bottom-center'
     });
 
+    this.pieChart = new Overlay({
+      element: this.document.getElementById('pieChart'),
+      position: [0, 0],
+      autoPan: true,
+      autoPanMargin: 275,
+      positioning: 'bottom-center'
+    });
+
 // Style Features using ..... FU values (called for each feature on every render call)
     const basicStyle = (feature, resolution) => {
       const fuValue = feature.get('fu_value');
@@ -152,6 +161,7 @@ export class AppComponent implements OnInit, AfterViewInit {
       // Populate datalayer
       const element = this.document.querySelector('.sub-header-stats') as HTMLElement;
       element.innerHTML = printStats(calculateStats(target.getSource().getFeatures()), this.userStore);
+      this.addPieChart(target.getSource().getFeatures());
     }, 200));
 
     this.map = new Map({
@@ -183,6 +193,8 @@ export class AppComponent implements OnInit, AfterViewInit {
 // Attach overlay and hide it
     this.map.addOverlay(this.popup);
     this.popup.setVisible(false);
+    this.map.addOverlay(this.pieChart);
+
 
 // Click events for panels
     this.document.getElementById('clearFilterButton').addEventListener('click', (event) => {
@@ -216,6 +228,7 @@ export class AppComponent implements OnInit, AfterViewInit {
         element.classList.add('active');
         this.popup.setPosition(coordinate);
       }
+      this.addPieChart(features, coordinate);
     });
 // Load users
     loadUsers().then((users) => {
@@ -344,5 +357,12 @@ export class AppComponent implements OnInit, AfterViewInit {
     this.document.querySelectorAll('.user-list .item').forEach(item => {
       item.classList.remove('selectedUser', 'box-shadow');
     });
+  }
+
+  private addPieChart(features, coordinate) {
+    const el = this.pieChart.getElement();
+    el.innerHTML = 'Pie Chart';
+    this.pieChart.setPosition(coordinate);
+    this.pieChart.setVisible(true);
   }
 }
