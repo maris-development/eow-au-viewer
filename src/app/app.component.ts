@@ -1,29 +1,9 @@
 import {Component, ElementRef, ViewChild, AfterViewInit, OnInit, Inject} from '@angular/core';
 import {DOCUMENT} from '@angular/common';
-// import './css/styles.css';
 import debounce from 'lodash/debounce';
 import keyBy from 'lodash/keyBy';
 import groupBy from 'lodash/groupBy';
-import {HostListener} from '@angular/core';
-
-// import {
-//   Map,
-//   View,
-//   Overlay
-// } from 'ol';
-// import {
-//   fromLonLat
-// } from 'ol/proj';
-// import {
-//   Tile as TileLayer,
-//   Vector as VectorLayer
-// } from 'ol/layer';
-// import {
-//   OSM,
-//   Vector as VectorSource
-// } from 'ol/source';
 import Map from 'ol/Map';
-import XYZ from 'ol/source/XYZ';
 import OSM from 'ol/source/OSM';
 import TileLayer from 'ol/layer/Tile';
 import View from 'ol/View';
@@ -54,7 +34,6 @@ import {
   styleUrls: ['./app.component.css'],
 })
 export class AppComponent implements OnInit, AfterViewInit {
-  // @ViewChild('popup', {static: false}) popupEl: ElementRef;
   title = 'ng-eow';
   map: Map;
   popup: any;
@@ -72,19 +51,17 @@ export class AppComponent implements OnInit, AfterViewInit {
   }
 
   ngOnInit() {
-
-// The WFS provided by EyeOnWater.org for Australia data
+  // The WFS provided by EyeOnWater.org for Australia data
     const WFS_URL = 'https://geoservice.maris.nl/wms/project/eyeonwater_australia?service=WFS'
       + '&version=1.0.0&request=GetFeature&typeName=eow_australia&maxFeatures=5000&outputFormat=application%2Fjson';
     const USER_SERVICE = 'https://www.eyeonwater.org/api/users';
     const styleCache = {};
-    // this.map = null;
     this.allDataSource = new VectorSource({
       format: new GeoJSON(),
       url: WFS_URL
     });
 
-// Fast datastructures to query the data
+    // Fast datastructures to query the data
     this.userStore = {
       users: [],
       userById: {},
@@ -104,12 +81,10 @@ export class AppComponent implements OnInit, AfterViewInit {
       }
 
     };
-// Get measurements from layer after it's done loading.
+    // Get measurements from layer after it's done loading.
     this.allDataSource.on('change', this.initialLoadMeasurements.bind(this));
 
     this.popup = new Overlay({
-      // element: this.popupEl.nativeElement,  // document.getElementById('popup'),
-      // element: this.document.getElementById('popup'),
       element: this.document.getElementById('popup'),
       position: [0, 0],
       autoPan: true,
@@ -161,7 +136,6 @@ export class AppComponent implements OnInit, AfterViewInit {
       // Populate datalayer
       const element = this.document.querySelector('.sub-header-stats') as HTMLElement;
       element.innerHTML = printStats(calculateStats(target.getSource().getFeatures()), this.userStore);
-      this.addPieChart(target.getSource().getFeatures());
     }, 200));
 
     this.map = new Map({
