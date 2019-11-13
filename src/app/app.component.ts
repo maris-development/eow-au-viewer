@@ -27,8 +27,8 @@ import {
   renderUsers,
   recentMeasurements
 } from './utils';
-import * as Highcharts from 'highcharts';
-import {SeriesPieOptions} from 'highcharts';
+// import * as Highcharts from 'highcharts';
+import {SeriesPieOptions, chart, setOptions, getOptions, map, Color} from 'highcharts';
 
 @Component({
   selector: 'app-root',
@@ -44,6 +44,7 @@ export class AppComponent implements OnInit, AfterViewInit {
   dataLayer: any;
   allDataSource: any;
   pieChart: any;
+  highchart: any;
 
   constructor(@Inject(DOCUMENT) private document: Document) {
   }
@@ -336,29 +337,36 @@ export class AppComponent implements OnInit, AfterViewInit {
   }
 
   private addPieChart(features, coordinate) {
+    if (this.highchart) {
+      this.highchart.destroy();
+      this.highchart = null;
+    } else {
+      setOptions({
+        colors: map(getOptions().colors, (color) => {
+          return {
+            radialGradient: {
+              cx: 0.5,
+              cy: 0.3,
+              r: 0.7
+            },
+            stops: [
+              [0, color],
+              [1, new Color(color).brighten(-0.3).get('rgb')] // darken
+            ]
+          };
+        })
+      });
+    }
+    this.pieChart.setVisible(false);
     const el = this.pieChart.getElement();
     // el.innerHTML = 'Pie Chart';
     // Radialize the colors
-    Highcharts.setOptions({
-      colors: Highcharts.map(Highcharts.getOptions().colors, (color) => {
-        return {
-          radialGradient: {
-            cx: 0.5,
-            cy: 0.3,
-            r: 0.7
-          },
-          stops: [
-            [0, color],
-            [1, Highcharts.Color(color).brighten(-0.3).get('rgb')] // darken
-          ]
-        };
-      })
-    });
+
 
 // Build the chart
-    Highcharts.chart(el, {
+    this.highchart = chart(el, {
       chart: {
-        plotBackgroundColor: null,
+        plotBackgroundColor: 'rgba(255, 255, 255, 0)',
         plotBorderWidth: 2,
         plotShadow: false,
         type: 'pie'
