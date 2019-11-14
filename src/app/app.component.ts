@@ -336,6 +336,13 @@ export class AppComponent implements OnInit, AfterViewInit {
     });
   }
 
+  /**
+   * If features are passed in (since one or more clicked on) then draw PieChart containing them.  If it is empty then draw chart of all
+   * features visible.
+   *
+   * @param features - EOW Data
+   * @param coordinate - the position of the mouse click in the viewport
+   */
   private addPieChart(features, coordinate) {
     if (this.highchart) {
       this.highchart.destroy();
@@ -357,6 +364,17 @@ export class AppComponent implements OnInit, AfterViewInit {
         })
       });
     }
+    const eowDataReducer = (acc, currentValue) => {
+      acc[currentValue.values_.fu_value] = acc.hasOwnProperty(currentValue.values_.fu_value) ? ++acc[currentValue.values_.fu_value] : 1;
+      return acc;
+    }
+    const eowDataFUValues = features.reduce(eowDataReducer, {});
+    console.log(`eowDataFUValues: ${JSON.stringify(eowDataFUValues)}`);
+
+    const eowData = Object.keys(eowDataFUValues).map(k => {
+      return {name: k, y: eowDataFUValues[k]};
+    });
+    console.log(`EOWData: ${JSON.stringify(eowData)}`)
     this.pieChart.setVisible(false);
     const el = this.pieChart.getElement();
     // el.innerHTML = 'Pie Chart';
@@ -372,7 +390,7 @@ export class AppComponent implements OnInit, AfterViewInit {
         type: 'pie'
       },
       title: {
-        text: 'Browser market shares in January, 2018'
+        text: 'FUIs on clicked markers'
       },
       tooltip: {
         pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
@@ -390,17 +408,20 @@ export class AppComponent implements OnInit, AfterViewInit {
       },
       series: [{
         name: 'Share',
-        data: [
-          { name: 'Chrome', y: 61.41 },
-          { name: 'Internet Explorer', y: 11.84 },
-          { name: 'Firefox', y: 10.85 },
-          { name: 'Edge', y: 4.67 },
-          { name: 'Safari', y: 4.18 },
-          { name: 'Other', y: 7.05 }
-        ]
+        data: eowData
+
       } as SeriesPieOptions]
     });
-    this.pieChart.setPosition(coordinate);
+    this.pieChart.setPosition([ 12938941.292552002, 4851621.792859137 ]); //coordinate);
     this.pieChart.setVisible(true);
   }
 }
+//
+// [
+//   { name: 'Chrome', y: 61.41 },
+//   { name: 'Internet Explorer', y: 11.84 },
+//   { name: 'Firefox', y: 10.85 },
+//   { name: 'Edge', y: 4.67 },
+//   { name: 'Safari', y: 4.18 },
+//   { name: 'Other', y: 7.05 }
+// ]
