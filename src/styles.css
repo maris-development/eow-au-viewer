@@ -75,6 +75,17 @@ html {
   border: 1px solid #acacac
 }
 
+#pieChart .close {
+  float: right;
+  position: absolute;
+  top: 4px;
+  right: 8px;
+}
+
+#pieChart .close::before {
+  content: '\00d7'
+}
+
 .fu-preview {
   display: inline-block;
   height: 20px;

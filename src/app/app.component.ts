@@ -240,6 +240,14 @@ export class AppComponent implements OnInit, AfterViewInit {
       }
     });
 
+    this.document.querySelector('#pieChart').addEventListener('click', (event: Event) => {
+      const element = (event.target as HTMLElement);
+      if (element.matches('.close')) {
+        this.pieChart.setVisible(false);
+        this.pieChart.getElement().classList.remove('active');
+      }
+    });
+
     // User List
     document.querySelector('.user-list').addEventListener('click', (event) => {
       const element = (event.target as HTMLElement).closest('.item');
