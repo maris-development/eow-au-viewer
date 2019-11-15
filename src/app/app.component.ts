@@ -207,7 +207,7 @@ export class AppComponent implements OnInit, AfterViewInit {
         content.innerHTML = features.map(printDetails).join('');
         stats.innerHTML = printStats(calculateStats(features), this.userStore);
         element.classList.add('active');
-        this.popup.setPosition([28468637.79432749, 5368841.526355445]);  // coordinate);
+        this.popup.setPosition(coordinate); // [28468637.79432749, 5368841.526355445]);  //
       }
       this.addPieChart(features, coordinate);
     });
@@ -362,7 +362,7 @@ export class AppComponent implements OnInit, AfterViewInit {
       // console.table(theFUColours);
 
       setOptions({
-        colors: map(theFUColours, function (color) {
+        colors: map(theFUColours, (color) => {
           return {
             radialGradient: {
               cx: 0.5,
@@ -371,28 +371,13 @@ export class AppComponent implements OnInit, AfterViewInit {
             },
             stops: [
               [0, color],
-              [1, new Color(color).brighten(-0.3).get('rgb')] // darken
+              [1, new Color(color).brighten(-0.2).get('rgb')] // darken
             ]
           };
         })
-        // colors: theFUColours.map(c => {
-        //   // map(theFUColours, (color) => {
-        //   // return color;
-        //   return {
-        //     radialGradient: {
-        //       cx: 0.5,
-        //       cy: 0.3,
-        //       r: 0.7
-        //     },
-        //     // linearGradient: { x1: color, x2: 0, y1: 0, y2: 1 },
-        //     // stops: [
-        //     //   [0, color],
-        //     //   [1, new Color(color).brighten(-0.3).get('rgb')] // darken
-        //     // ]
-        //   };
-        // })
       });
     }
+
     const aggregateFUValues = (fuValuesInFeatures) => {
       const eowDataReducer = (acc, currentValue) => {
         acc[currentValue.values_.fu_value] = acc.hasOwnProperty(currentValue.values_.fu_value) ? ++acc[currentValue.values_.fu_value] : 1;
@@ -400,23 +385,18 @@ export class AppComponent implements OnInit, AfterViewInit {
       };
       return features.reduce(eowDataReducer, {});
     };
-    let eowDataFUValues = aggregateFUValues(features);
-    // add zeros for all the other FUs since the colours in Highcharts pie charts are from the ordinal number of the data, NOT the value
+    // Add zeros for all the other FUs since the colours in Highcharts pie charts are from the ordinal number of the data, NOT the value
     // of it's "name" attribute
-    // Object.keys(colors).forEach(c => [
-    //   if (eowDataFUValues)
-    // ])
-    const arrayFUValues = Object.keys(eowDataFUValues).map(i => {
-      return parseInt(i, 10);
-    })
-
+    const setMissingFUsToZero = (fUValuesObj) => {
+      return Object.keys(fUValuesObj).map(i => {
+        return parseInt(i, 10);
+      });
+    };
     const arrayToObject = (array) =>
-      array.reduce((obj, item) => {
-        obj[item] = item
-        return obj;
-      }, {});
-    const arrayFUValuesObj = arrayToObject(arrayFUValues);
-
+    array.reduce((obj, item) => {
+      obj[item] = item
+      return obj;
+    }, {});
     const addMissingFUValues = (existingFUs, missingFUs) => {
       Object.keys(colors).forEach((key, index) => {
         if (! missingFUs.hasOwnProperty(index)) {
@@ -424,11 +404,13 @@ export class AppComponent implements OnInit, AfterViewInit {
         }
       });
       return existingFUs;
-    }
-    eowDataFUValues = addMissingFUValues(eowDataFUValues, arrayFUValuesObj);
+    };
 
-    console.log(`arrayFUValuesObj: ${JSON.stringify(arrayFUValuesObj)}`);
-    console.log(`eowDataFUValues: ${JSON.stringify(eowDataFUValues)}`);
+    let eowDataFUValues = aggregateFUValues(features);
+    const arrayFUValues = setMissingFUsToZero(eowDataFUValues);
+    const arrayFUValuesObj = arrayToObject(arrayFUValues);
+
+    eowDataFUValues = addMissingFUValues(eowDataFUValues, arrayFUValuesObj);
 
     const eowData = Object.keys(eowDataFUValues).map(k => {
       return {name: k, y: eowDataFUValues[k]};
@@ -436,20 +418,19 @@ export class AppComponent implements OnInit, AfterViewInit {
     console.log(`EOWData: ${JSON.stringify(eowData)}`);
     this.pieChart.setVisible(false);
     const el = this.pieChart.getElement();
-    // el.innerHTML = 'Pie Chart';
-    // Radialize the colors
 
-
-// Build the chart
+    // Build the chart
     this.highchart = chart(el, {
       chart: {
         plotBackgroundColor: 'rgba(255, 255, 255, 0)',
         plotBorderWidth: 2,
         plotShadow: false,
-        type: 'pie'
+        type: 'pie',
+        height: '200px',
+        width: 150
       },
       title: {
-        text: 'FUIs on clicked markers'
+        text: 'FUIs on selected markers'
       },
       tooltip: {
         pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
@@ -468,20 +449,9 @@ export class AppComponent implements OnInit, AfterViewInit {
       series: [{
         name: 'Share',
         data: eowData
-
       } as SeriesPieOptions]
     });
-    this.pieChart.setPosition([12938941.292552002, 4851621.792859137]); // coordinate);
+    this.pieChart.setPosition([coordinate.x - 200, coordinate.y]);  // [12938941.292552002, 4851621.792859137]); //
     this.pieChart.setVisible(true);
   }
 }
-
-//
-// [
-//   { name: 'Chrome', y: 61.41 },
-//   { name: 'Internet Explorer', y: 11.84 },
-//   { name: 'Firefox', y: 10.85 },
-//   { name: 'Edge', y: 4.67 },
-//   { name: 'Safari', y: 4.18 },
-//   { name: 'Other', y: 7.05 }
-// ]
