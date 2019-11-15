@@ -64,8 +64,8 @@ export class AppComponent implements OnInit, AfterViewInit {
       url: WFS_URL
     });
 
-    console.log(`colors:`);
-    console.table(colors);
+    // console.log(`colors:`);
+    // console.table(colors);
 
     // Fast datastructures to query the data
     this.userStore = {
@@ -362,21 +362,34 @@ export class AppComponent implements OnInit, AfterViewInit {
       // console.table(theFUColours);
 
       setOptions({
-        colors: theFUColours  // .map(c => c + 12)
-        // map(theFUColours, (color) => {
-        // return color;
-        // // {
-        // radialGradient: {
-        //   cx: 0.5,
-        //   cy: 0.3,
-        //   r: 0.7
-        // },
-        // linearGradient: { x1: color, x2: 0, y1: 0, y2: 1 },
-        // stops: [
-        //   [0, color],
-        //   [1, new Color(color).brighten(-0.3).get('rgb')] // darken
-        // ]
-        // };
+        colors: map(theFUColours, function (color) {
+          return {
+            radialGradient: {
+              cx: 0.5,
+              cy: 0.3,
+              r: 0.7
+            },
+            stops: [
+              [0, color],
+              [1, new Color(color).brighten(-0.3).get('rgb')] // darken
+            ]
+          };
+        })
+        // colors: theFUColours.map(c => {
+        //   // map(theFUColours, (color) => {
+        //   // return color;
+        //   return {
+        //     radialGradient: {
+        //       cx: 0.5,
+        //       cy: 0.3,
+        //       r: 0.7
+        //     },
+        //     // linearGradient: { x1: color, x2: 0, y1: 0, y2: 1 },
+        //     // stops: [
+        //     //   [0, color],
+        //     //   [1, new Color(color).brighten(-0.3).get('rgb')] // darken
+        //     // ]
+        //   };
         // })
       });
     }
