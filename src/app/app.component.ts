@@ -446,7 +446,7 @@ export class AppComponent implements OnInit, AfterViewInit {
           allowPointSelect: true,
           cursor: 'pointer',
           dataLabels: {
-            enabled: true,
+            enabled: false,
             format: '<b>{point.name}</b>: {point.percentage:.1f} %',
             connectorColor: 'brown'
           }
