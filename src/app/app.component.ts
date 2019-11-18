@@ -1,29 +1,9 @@
 import {Component, ElementRef, ViewChild, AfterViewInit, OnInit, Inject} from '@angular/core';
 import {DOCUMENT} from '@angular/common';
-// import './css/styles.css';
 import debounce from 'lodash/debounce';
 import keyBy from 'lodash/keyBy';
 import groupBy from 'lodash/groupBy';
-import {HostListener} from '@angular/core';
-
-// import {
-//   Map,
-//   View,
-//   Overlay
-// } from 'ol';
-// import {
-//   fromLonLat
-// } from 'ol/proj';
-// import {
-//   Tile as TileLayer,
-//   Vector as VectorLayer
-// } from 'ol/layer';
-// import {
-//   OSM,
-//   Vector as VectorSource
-// } from 'ol/source';
 import Map from 'ol/Map';
-import XYZ from 'ol/source/XYZ';
 import OSM from 'ol/source/OSM';
 import TileLayer from 'ol/layer/Tile';
 import View from 'ol/View';
@@ -47,6 +27,8 @@ import {
   renderUsers,
   recentMeasurements
 } from './utils';
+// import * as Highcharts from 'highcharts';
+import {SeriesPieOptions, chart, setOptions, getOptions, map, Color} from 'highcharts';
 
 @Component({
   selector: 'app-root',
@@ -54,7 +36,6 @@ import {
   styleUrls: ['./app.component.css'],
 })
 export class AppComponent implements OnInit, AfterViewInit {
-  // @ViewChild('popup', {static: false}) popupEl: ElementRef;
   title = 'ng-eow';
   map: Map;
   popup: any;
@@ -62,6 +43,8 @@ export class AppComponent implements OnInit, AfterViewInit {
   userStore: any;
   dataLayer: any;
   allDataSource: any;
+  pieChart: any;
+  highchart: any;
 
   constructor(@Inject(DOCUMENT) private document: Document) {
   }
@@ -71,19 +54,20 @@ export class AppComponent implements OnInit, AfterViewInit {
   }
 
   ngOnInit() {
-
-// The WFS provided by EyeOnWater.org for Australia data
+    // The WFS provided by EyeOnWater.org for Australia data
     const WFS_URL = 'https://geoservice.maris.nl/wms/project/eyeonwater_australia?service=WFS'
       + '&version=1.0.0&request=GetFeature&typeName=eow_australia&maxFeatures=5000&outputFormat=application%2Fjson';
     const USER_SERVICE = 'https://www.eyeonwater.org/api/users';
     const styleCache = {};
-    // this.map = null;
     this.allDataSource = new VectorSource({
       format: new GeoJSON(),
       url: WFS_URL
     });
 
-// Fast datastructures to query the data
+    // console.log(`colors:`);
+    // console.table(colors);
+
+    // Fast datastructures to query the data
     this.userStore = {
       users: [],
       userById: {},
@@ -103,13 +87,19 @@ export class AppComponent implements OnInit, AfterViewInit {
       }
 
     };
-// Get measurements from layer after it's done loading.
+    // Get measurements from layer after it's done loading.
     this.allDataSource.on('change', this.initialLoadMeasurements.bind(this));
 
     this.popup = new Overlay({
-      // element: this.popupEl.nativeElement,  // document.getElementById('popup'),
-      // element: this.document.getElementById('popup'),
       element: this.document.getElementById('popup'),
+      position: [0, 0],
+      autoPan: true,
+      autoPanMargin: 275,
+      positioning: 'bottom-center'
+    });
+
+    this.pieChart = new Overlay({
+      element: this.document.getElementById('pieChart'),
       position: [0, 0],
       autoPan: true,
       autoPanMargin: 275,
@@ -147,8 +137,8 @@ export class AppComponent implements OnInit, AfterViewInit {
     });
 
     this.dataLayer.on('change', debounce(({
-                                       target
-                                     }) => {
+                                            target
+                                          }) => {
       // Populate datalayer
       const element = this.document.querySelector('.sub-header-stats') as HTMLElement;
       element.innerHTML = printStats(calculateStats(target.getSource().getFeatures()), this.userStore);
@@ -183,6 +173,8 @@ export class AppComponent implements OnInit, AfterViewInit {
 // Attach overlay and hide it
     this.map.addOverlay(this.popup);
     this.popup.setVisible(false);
+    this.map.addOverlay(this.pieChart);
+
 
 // Click events for panels
     this.document.getElementById('clearFilterButton').addEventListener('click', (event) => {
@@ -196,6 +188,7 @@ export class AppComponent implements OnInit, AfterViewInit {
         coordinate
       } = evt;
 
+      console.log(`Clicked on map at: ${JSON.stringify(coordinate)}`);
       // clean up old popup and initilize some variables
       this.popup.setVisible(false);
       const element = this.popup.getElement();
@@ -214,8 +207,9 @@ export class AppComponent implements OnInit, AfterViewInit {
         content.innerHTML = features.map(printDetails).join('');
         stats.innerHTML = printStats(calculateStats(features), this.userStore);
         element.classList.add('active');
-        this.popup.setPosition(coordinate);
+        this.popup.setPosition(coordinate); // [28468637.79432749, 5368841.526355445]);  //
       }
+      this.addPieChart(features, coordinate);
     });
 // Load users
     loadUsers().then((users) => {
@@ -243,6 +237,14 @@ export class AppComponent implements OnInit, AfterViewInit {
       } else if (element.matches('.more-info-btn')) {
         const popupElement = element.closest('.popup-item');
         popupElement.classList.toggle('active');
+      }
+    });
+
+    this.document.querySelector('#pieChart').addEventListener('click', (event: Event) => {
+      const element = (event.target as HTMLElement);
+      if (element.matches('.close')) {
+        this.pieChart.setVisible(false);
+        this.pieChart.getElement().classList.remove('active');
       }
     });
 
@@ -290,6 +292,7 @@ export class AppComponent implements OnInit, AfterViewInit {
         popupElement.classList.add('active');
 
         this.popup.setPosition(coordinate);
+        this.addPieChart(features, coordinate);
       }
     }, true);
   }
@@ -310,22 +313,22 @@ export class AppComponent implements OnInit, AfterViewInit {
 
 
   private showMeasurements(userId = null) {
-      const newSource = new VectorSource();
-      const selection = this.measurementStore.getByOwner(userId);
-      if (!selection.length) {
-        return false;
-      }
-      newSource.addFeatures(selection);
-      this.map.getView().fit(newSource.getExtent(), {
-        size: this.map.getSize(),
-        padding: [100, 100, 100, 100],
-        nearest: false,
-        duration: 1300
-      });
-      this.dataLayer.setSource(newSource);
-      recentMeasurements(selection);
-      return true;
+    const newSource = new VectorSource();
+    const selection = this.measurementStore.getByOwner(userId);
+    if (!selection.length) {
+      return false;
     }
+    newSource.addFeatures(selection);
+    this.map.getView().fit(newSource.getExtent(), {
+      size: this.map.getSize(),
+      padding: [100, 100, 100, 100],
+      nearest: false,
+      duration: 1300
+    });
+    this.dataLayer.setSource(newSource);
+    recentMeasurements(selection);
+    return true;
+  }
 
   private clearFilter() {
     this.dataLayer.setSource(this.allDataSource);
@@ -344,5 +347,119 @@ export class AppComponent implements OnInit, AfterViewInit {
     this.document.querySelectorAll('.user-list .item').forEach(item => {
       item.classList.remove('selectedUser', 'box-shadow');
     });
+  }
+
+  /**
+   * If features are passed in (since one or more clicked on) then draw PieChart containing them.  If it is empty then draw chart of all
+   * features visible.
+   *
+   * @param features - EOW Data
+   * @param coordinate - the position of the mouse click in the viewport
+   */
+  private addPieChart(features, coordinate) {
+    if (this.highchart) {
+      this.highchart.destroy();
+      this.highchart = null;
+    } else {
+      const cArray = Object.keys(colors);
+      const theFUColours = cArray.map(c => {
+        const index = (parseInt(c, 10)) % cArray.length;
+        // console.log(`colors length: ${cArray.length}, c: ${c}, color index: ${index}`);
+        return colors[index];
+      });
+      // console.table(theFUColours);
+
+      setOptions({
+        colors: map(theFUColours, (color) => {
+          return {
+            radialGradient: {
+              cx: 0.5,
+              cy: 0.3,
+              r: 0.7
+            },
+            stops: [
+              [0, color],
+              [1, new Color(color).brighten(-0.2).get('rgb')] // darken
+            ]
+          };
+        })
+      });
+    }
+
+    const aggregateFUValues = (fuValuesInFeatures) => {
+      const eowDataReducer = (acc, currentValue) => {
+        acc[currentValue.values_.fu_value] = acc.hasOwnProperty(currentValue.values_.fu_value) ? ++acc[currentValue.values_.fu_value] : 1;
+        return acc;
+      };
+      return features.reduce(eowDataReducer, {});
+    };
+    // Add zeros for all the other FUs since the colours in Highcharts pie charts are from the ordinal number of the data, NOT the value
+    // of it's "name" attribute
+    const setMissingFUsToZero = (fUValuesObj) => {
+      return Object.keys(fUValuesObj).map(i => {
+        return parseInt(i, 10);
+      });
+    };
+    const arrayToObject = (array) =>
+    array.reduce((obj, item) => {
+      obj[item] = item
+      return obj;
+    }, {});
+    const addMissingFUValues = (existingFUs, missingFUs) => {
+      Object.keys(colors).forEach((key, index) => {
+        if (! missingFUs.hasOwnProperty(index)) {
+          existingFUs[index] = 0;
+        }
+      });
+      return existingFUs;
+    };
+
+    let eowDataFUValues = aggregateFUValues(features);
+    const arrayFUValues = setMissingFUsToZero(eowDataFUValues);
+    const arrayFUValuesObj = arrayToObject(arrayFUValues);
+
+    eowDataFUValues = addMissingFUValues(eowDataFUValues, arrayFUValuesObj);
+
+    const eowData = Object.keys(eowDataFUValues).map(k => {
+      return {name: k, y: eowDataFUValues[k]};
+    });
+    console.log(`EOWData: ${JSON.stringify(eowData)}`);
+    this.pieChart.setVisible(false);
+    const el = this.pieChart.getElement();
+
+    // Build the chart
+    this.highchart = chart(el, {
+      chart: {
+        plotBackgroundColor: 'rgba(255, 255, 255, 0)',
+        plotBorderWidth: 2,
+        plotShadow: false,
+        type: 'pie',
+        height: '200px',
+        width: 150
+      },
+      title: {
+        text: 'FUIs on selected markers'
+      },
+      tooltip: {
+        pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+      },
+      plotOptions: {
+        pie: {
+          allowPointSelect: true,
+          cursor: 'pointer',
+          dataLabels: {
+            enabled: false,
+            format: '<b>{point.name}</b>: {point.percentage:.1f} %',
+            connectorColor: 'brown'
+          }
+        }
+      },
+      series: [{
+        name: 'Share',
+        data: eowData
+      } as SeriesPieOptions]
+    });
+    this.pieChart.setPosition([coordinate.x - 200, coordinate.y]);  // [12938941.292552002, 4851621.792859137]); //
+    this.pieChart.setVisible(true);
   }
 }
