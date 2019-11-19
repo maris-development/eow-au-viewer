@@ -468,11 +468,6 @@ export class AppComponent implements OnInit, AfterViewInit {
   }
 
   private addShapeFiles() {
-    const namePointerImage = new CircleStyle({
-      radius: 5,
-      fill: null,
-      stroke: new Stroke({color: 'red', width: 1})
-    });
     const iconStyle = new Style({
       image: new Icon({
         anchor: [0.5, 46],
@@ -483,8 +478,8 @@ export class AppComponent implements OnInit, AfterViewInit {
         src: '../assets/icon.png'
       })
     });
-    const namePointStyle = new Style({
-      image: namePointerImage
+    const fillStyle = new Style({
+      fill: new Fill({color: 'rgba(224, 255, 255, 0.33)'})
     });
     this.shapesLayerShape = new VectorLayer({
       title: 'Waterbodies shape',
@@ -496,6 +491,7 @@ export class AppComponent implements OnInit, AfterViewInit {
     });
     this.shapesLayerFill = new VectorLayer({
       title: 'Waterbodies fill',
+      style: fillStyle,
       source: new VectorSource({
         url: '../assets/waterbodies/aus25wgd_r.geojson',
         format: new GeoJSON(),
