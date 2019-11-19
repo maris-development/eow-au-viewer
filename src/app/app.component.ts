@@ -19,6 +19,7 @@ import {
   Stroke,
   Fill
 } from 'ol/style';
+import Icon from 'ol/style/Icon';
 import {
   colors,
   printDetails,
@@ -185,7 +186,7 @@ export class AppComponent implements OnInit, AfterViewInit {
     });
 
 // Show popup with features at certain point on the map
-    this.map.on('click', (evt) => {
+    this.map.on('xclick', (evt) => {
       const {
         pixel,
         coordinate
@@ -405,7 +406,7 @@ export class AppComponent implements OnInit, AfterViewInit {
     };
     const arrayToObject = (array) =>
     array.reduce((obj, item) => {
-      obj[item] = item
+      obj[item] = item;
       return obj;
     }, {});
     const addMissingFUValues = (existingFUs, missingFUs) => {
@@ -467,6 +468,24 @@ export class AppComponent implements OnInit, AfterViewInit {
   }
 
   private addShapeFiles() {
+    const namePointerImage = new CircleStyle({
+      radius: 5,
+      fill: null,
+      stroke: new Stroke({color: 'red', width: 1})
+    });
+    const iconStyle = new Style({
+      image: new Icon({
+        anchor: [0.5, 46],
+        anchorXUnits: 'fraction',
+        anchorYUnits: 'pixels',
+        opacity: 0.75,
+        scale: 0.02,
+        src: '../assets/icon.png'
+      })
+    });
+    const namePointStyle = new Style({
+      image: namePointerImage
+    });
     this.shapesLayerShape = new VectorLayer({
       title: 'Waterbodies shape',
       source: new VectorSource({
@@ -486,6 +505,7 @@ export class AppComponent implements OnInit, AfterViewInit {
     this.shapesLayerNames = new VectorLayer({
       title: 'Waterbodies name',
       minZoom: 8,
+      style: iconStyle,
       source: new VectorSource({
         url: '../assets/waterbodies/aus25wgd_p.geojson',
         format: new GeoJSON(),
@@ -501,7 +521,6 @@ export class AppComponent implements OnInit, AfterViewInit {
   }
 
   ToggleShapesLayer() {
-    console.log(`this.shapesLayer.visible: ${this.shapesLayerShape.getVisible()}`)
     this.shapesLayerShape.setVisible(!this.shapesLayerShape.getVisible());
     this.shapesLayerFill.setVisible(!this.shapesLayerFill.getVisible());
     this.shapesLayerNames.setVisible(!this.shapesLayerNames.getVisible());
