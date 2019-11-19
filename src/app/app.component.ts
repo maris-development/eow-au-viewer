@@ -45,6 +45,9 @@ export class AppComponent implements OnInit, AfterViewInit {
   allDataSource: any;
   pieChart: any;
   highchart: any;
+  shapesLayerShape: any;
+  shapesLayerFill: any;
+  shapesLayerNames: any;
 
   constructor(@Inject(DOCUMENT) private document: Document) {
   }
@@ -217,7 +220,7 @@ export class AppComponent implements OnInit, AfterViewInit {
       this.userStore.userById = keyBy(this.userStore.users, 'id');
       renderUsers(this.userStore.users);
     });
-
+    this.addShapeFiles();
     this.setupEventHandlers();
   }
 
@@ -461,5 +464,46 @@ export class AppComponent implements OnInit, AfterViewInit {
     });
     this.pieChart.setPosition([coordinate.x - 200, coordinate.y]);  // [12938941.292552002, 4851621.792859137]); //
     this.pieChart.setVisible(true);
+  }
+
+  private addShapeFiles() {
+    this.shapesLayerShape = new VectorLayer({
+      title: 'Waterbodies shape',
+      source: new VectorSource({
+        url: '../assets/waterbodies/aus25wgd_l.geojson',
+        format: new GeoJSON(),
+        projection : 'EPSG:4326'
+      })
+    });
+    this.shapesLayerFill = new VectorLayer({
+      title: 'Waterbodies fill',
+      source: new VectorSource({
+        url: '../assets/waterbodies/aus25wgd_r.geojson',
+        format: new GeoJSON(),
+        projection : 'EPSG:4326'
+      })
+    });
+    this.shapesLayerNames = new VectorLayer({
+      title: 'Waterbodies name',
+      minZoom: 8,
+      source: new VectorSource({
+        url: '../assets/waterbodies/aus25wgd_p.geojson',
+        format: new GeoJSON(),
+        projection : 'EPSG:4326'
+      })
+    });
+    this.map.addLayer(this.shapesLayerShape);
+    this.map.addLayer(this.shapesLayerFill);
+    this.map.addLayer(this.shapesLayerNames);
+    this.shapesLayerShape.setVisible(true);
+    this.shapesLayerFill.setVisible(true);
+    this.shapesLayerNames.setVisible(true);
+  }
+
+  ToggleShapesLayer() {
+    console.log(`this.shapesLayer.visible: ${this.shapesLayerShape.getVisible()}`)
+    this.shapesLayerShape.setVisible(!this.shapesLayerShape.getVisible());
+    this.shapesLayerFill.setVisible(!this.shapesLayerFill.getVisible());
+    this.shapesLayerNames.setVisible(!this.shapesLayerNames.getVisible());
   }
 }
