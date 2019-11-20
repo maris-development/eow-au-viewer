@@ -10,6 +10,7 @@ import View from 'ol/View';
 import VectorSource from 'ol/source/Vector';
 import Overlay from 'ol/Overlay';
 import VectorLayer from 'ol/layer/Vector';
+import ImageLayer from 'ol/layer/Image';
 import {fromLonLat} from 'ol/proj';
 
 import GeoJSON from 'ol/format/GeoJSON';
@@ -20,6 +21,8 @@ import {
   Fill
 } from 'ol/style';
 import Icon from 'ol/style/Icon';
+import ImageWMS from 'ol/source/ImageWMS';
+
 import {
   colors,
   printDetails,
@@ -49,6 +52,7 @@ export class AppComponent implements OnInit, AfterViewInit {
   shapesLayerShape: any;
   shapesLayerFill: any;
   shapesLayerNames: any;
+  wofsWMS: any;
 
   constructor(@Inject(DOCUMENT) private document: Document) {
   }
@@ -139,6 +143,7 @@ export class AppComponent implements OnInit, AfterViewInit {
       source: this.allDataSource,
       style: basicStyle
     });
+    this.dataLayer.set('name', 'EOW Data');
 
     this.dataLayer.on('change', debounce(({
                                             target
@@ -148,12 +153,15 @@ export class AppComponent implements OnInit, AfterViewInit {
       element.innerHTML = printStats(calculateStats(target.getSource().getFeatures()), this.userStore);
     }, 200));
 
+    const mainMap = new TileLayer({
+      source: new OSM()
+    });
+    mainMap.set('name', 'Main map');
+
     this.map = new Map({
       target: 'map',
       layers: [
-        new TileLayer({
-          source: new OSM()
-        }),
+        mainMap,
         this.dataLayer
       ],
       view: new View({
@@ -222,6 +230,8 @@ export class AppComponent implements OnInit, AfterViewInit {
       renderUsers(this.userStore.users);
     });
     this.addShapeFiles();
+    this.addGADEAWOFS();
+    this.setupLayerSelectionMenu();
     this.setupEventHandlers();
   }
 
@@ -511,14 +521,70 @@ export class AppComponent implements OnInit, AfterViewInit {
     this.map.addLayer(this.shapesLayerShape);
     this.map.addLayer(this.shapesLayerFill);
     this.map.addLayer(this.shapesLayerNames);
+    this.shapesLayerShape.set('name', 'Shapes');
+    this.shapesLayerFill.set('name', 'Shapes Fill');
+    this.shapesLayerNames.set('name', 'Shapes Names');
     this.shapesLayerShape.setVisible(true);
     this.shapesLayerFill.setVisible(true);
     this.shapesLayerNames.setVisible(true);
   }
 
-  ToggleShapesLayer() {
-    this.shapesLayerShape.setVisible(!this.shapesLayerShape.getVisible());
-    this.shapesLayerFill.setVisible(!this.shapesLayerFill.getVisible());
-    this.shapesLayerNames.setVisible(!this.shapesLayerNames.getVisible());
+  // Water Observations from Space 25m Filtered Summary (WOfS Filtered Statistics)
+  // http://terria-cube.terria.io/ > Add data > DEA Production > Water Observations from Space > All time summaries
+  private addGADEAWOFS() {
+    this.wofsWMS = new ImageLayer({
+      opacity: 0.6,
+      source: new ImageWMS({
+        url: 'https://ows.services.dea.ga.gov.au/',
+        params: {
+          LAYERS: 'wofs_filtered_summary'
+        },
+        // extent: [-13884991, -7455066, 2870341, 6338219]
+      })
+    });
+    this.wofsWMS.set('name', 'Water Observations from Space 25m Filtered Summary (WOfS Filtered Statistics)');
+    this.map.addLayer(this.wofsWMS);
+    this.wofsWMS.setVisible(true);
+  }
+
+  private setupLayerSelectionMenu() {
+    const generateCheckbox = (idCheckbox, labelName, htmlElement) => {
+      const checkbox = this.document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.id = idCheckbox;
+      const label = this.document.createElement('label');
+      label.htmlFor = idCheckbox;
+      label.appendChild(this.document.createTextNode(labelName));
+      htmlElement.appendChild(checkbox);
+      htmlElement.appendChild(label);
+      return checkbox;
+    };
+
+    const layers = this.map.getLayers().getArray();
+    for (let i = layers.length - 1; i >= 0; i--) {
+      const layer = layers[i];
+      const layerId = 'layer_id_' + layers[i].get('id');
+      const name = layers[i].get('name');
+      const checkbox = generateCheckbox( i, name, this.document.querySelector('.layersSwitch'));
+
+      // Manage when checkbox is (un)checked
+      checkbox.addEventListener('change', function() {
+        if (this.checked !== layer.getVisible()) {
+          layer.setVisible(this.checked);
+        }
+      });
+
+      // Manage when layer visibility changes outside of this
+      layer.on('change:visible', function() {
+        if (this.getVisible() !== checkbox.checked) {
+          checkbox.checked = this.getVisible();
+        }
+      });
+
+      // Set state the first time
+      setTimeout(() => {
+        checkbox.checked = layer.getVisible();
+      }, 1000);
+    }
   }
 }
