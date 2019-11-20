@@ -10,6 +10,7 @@ import View from 'ol/View';
 import VectorSource from 'ol/source/Vector';
 import Overlay from 'ol/Overlay';
 import VectorLayer from 'ol/layer/Vector';
+import ImageLayer from 'ol/layer/Image';
 import {fromLonLat} from 'ol/proj';
 
 import GeoJSON from 'ol/format/GeoJSON';
@@ -20,6 +21,8 @@ import {
   Fill
 } from 'ol/style';
 import Icon from 'ol/style/Icon';
+import ImageWMS from 'ol/source/ImageWMS';
+
 import {
   colors,
   printDetails,
@@ -222,6 +225,8 @@ export class AppComponent implements OnInit, AfterViewInit {
       renderUsers(this.userStore.users);
     });
     this.addShapeFiles();
+    this.addGADEAWOFS();
+    this.setupLayerSelectionMenu();
     this.setupEventHandlers();
   }
 
@@ -521,4 +526,23 @@ export class AppComponent implements OnInit, AfterViewInit {
     this.shapesLayerFill.setVisible(!this.shapesLayerFill.getVisible());
     this.shapesLayerNames.setVisible(!this.shapesLayerNames.getVisible());
   }
+
+  // Water Observations from Space 25m Filtered Summary (WOfS Filtered Statistics)
+  // http://terria-cube.terria.io/ > Add data > DEA Production > Water Observations from Space > All time summaries
+  private addGADEAWOFS() {
+    this.wofsWMS = new ImageLayer({
+      opacity: 0.6,
+      source: new ImageWMS({
+        url: 'https://ows.dea.ga.gov.au',
+        params: {
+          LAYERS: 'wofs_filtered_summary'
+        },
+        // extent: [-13884991, -7455066, 2870341, 6338219]
+      })
+    });
+    this.wofsWMS.set('name', 'Water Observations from Space 25m Filtered Summary (WOfS Filtered Statistics)');
+    this.map.addLayer(this.wofsWMS);
+    this.wofsWMS.setVisible(true);
+  }
+
 }
