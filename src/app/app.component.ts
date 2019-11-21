@@ -165,8 +165,8 @@ export class AppComponent implements OnInit, AfterViewInit {
         this.dataLayer
       ],
       view: new View({
-        center: fromLonLat([133.07421121913038, 28.566680043403878]),
-        zoom: 2
+        center: fromLonLat([133.945313, -26.431228]),
+        zoom: 4
       }),
       controls: []
     });
@@ -287,7 +287,7 @@ export class AppComponent implements OnInit, AfterViewInit {
       view.cancelAnimations();
       view.animate({
         center: coordinate,
-        zoom: 7,
+        zoom: 8,
         duration: 1300
       });
       // clean up old popup and initilize some variables
@@ -535,11 +535,11 @@ export class AppComponent implements OnInit, AfterViewInit {
     this.wofsWMS = new ImageLayer({
       opacity: 0.6,
       source: new ImageWMS({
-        url: 'https://ows.services.dea.ga.gov.au/',
+        url: 'https://ows.dea.ga.gov.au/',  // services.
         params: {
           LAYERS: 'wofs_filtered_summary'
         },
-        // extent: [-13884991, -7455066, 2870341, 6338219]
+        // extent: [ -5687813.782846, 12530995.153909, -15894844.529378, 3585760.291316 ] // -13884991, -7455066, 2870341, 6338219]
       })
     });
     this.wofsWMS.set('name', 'Water Observations from Space 25m Filtered Summary (WOfS Filtered Statistics)');
