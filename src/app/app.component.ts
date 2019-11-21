@@ -1,4 +1,4 @@
-import {Component, ElementRef, ViewChild, AfterViewInit, OnInit, Inject} from '@angular/core';
+import {Component, AfterViewInit, OnInit, Inject} from '@angular/core';
 import {DOCUMENT} from '@angular/common';
 import debounce from 'lodash/debounce';
 import keyBy from 'lodash/keyBy';
@@ -10,7 +10,6 @@ import View from 'ol/View';
 import VectorSource from 'ol/source/Vector';
 import Overlay from 'ol/Overlay';
 import VectorLayer from 'ol/layer/Vector';
-import ImageLayer from 'ol/layer/Image';
 import {fromLonLat} from 'ol/proj';
 
 import GeoJSON from 'ol/format/GeoJSON';
@@ -21,7 +20,7 @@ import {
   Fill
 } from 'ol/style';
 import Icon from 'ol/style/Icon';
-import ImageWMS from 'ol/source/ImageWMS';
+import TileWMS from 'ol/source/TileWMS';
 
 import {
   colors,
@@ -531,16 +530,18 @@ export class AppComponent implements OnInit, AfterViewInit {
 
   // Water Observations from Space 25m Filtered Summary (WOfS Filtered Statistics)
   // http://terria-cube.terria.io/ > Add data > DEA Production > Water Observations from Space > All time summaries
+  // Discussed problem with rendering from DEA server with OpenDataCube slack group and worked out a solution.
+  // Feedback also was that https://ows.services.dea.ga.gov.au has caching but https://ows.dea.ga.gov.au doesn't.  Use the later.
   private addGADEAWOFS() {
-    this.wofsWMS = new ImageLayer({
+    this.wofsWMS = new TileLayer({
       opacity: 0.6,
-      source: new ImageWMS({
-        url: 'https://ows.services.dea.ga.gov.au',  // services.
+      source: new TileWMS({
+        url: 'https://ows.dea.ga.gov.au',
         params: {
           LAYERS: 'wofs_filtered_summary',
           TILED: true
         },
-        // extent: [ -5687813.782846, 12530995.153909, -15894844.529378, 3585760.291316 ] // -13884991, -7455066, 2870341, 6338219]
+        extent: [ -5687813.782846, 12530995.153909, -15894844.529378, 3585760.291316 ] // -13884991, -7455066, 2870341, 6338219]
       })
     });
     this.wofsWMS.set('name', 'Water Observations from Space 25m Filtered Summary (WOfS Filtered Statistics)');
