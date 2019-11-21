@@ -535,9 +535,10 @@ export class AppComponent implements OnInit, AfterViewInit {
     this.wofsWMS = new ImageLayer({
       opacity: 0.6,
       source: new ImageWMS({
-        url: 'https://ows.dea.ga.gov.au/',  // services.
+        url: 'https://ows.services.dea.ga.gov.au',  // services.
         params: {
-          LAYERS: 'wofs_filtered_summary'
+          LAYERS: 'wofs_filtered_summary',
+          TILED: true
         },
         // extent: [ -5687813.782846, 12530995.153909, -15894844.529378, 3585760.291316 ] // -13884991, -7455066, 2870341, 6338219]
       })
