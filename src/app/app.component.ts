@@ -103,7 +103,7 @@ export class AppComponent implements OnInit, AfterViewInit {
       position: [0, 0],
       autoPan: true,
       autoPanMargin: 275,
-      positioning: 'bottom-center'
+      positioning: 'bottom-left'
     });
 
     this.pieChart = new Overlay({
@@ -111,7 +111,7 @@ export class AppComponent implements OnInit, AfterViewInit {
       position: [0, 0],
       autoPan: true,
       autoPanMargin: 275,
-      positioning: 'bottom-center'
+      positioning: 'top-left'
     });
 
 // Style Features using ..... FU values (called for each feature on every render call)
@@ -194,7 +194,7 @@ export class AppComponent implements OnInit, AfterViewInit {
     });
 
 // Show popup with features at certain point on the map
-    this.map.on('xclick', (evt) => {
+    this.map.on('click', (evt) => {
       const {
         pixel,
         coordinate
@@ -473,7 +473,7 @@ export class AppComponent implements OnInit, AfterViewInit {
         data: eowData
       } as SeriesPieOptions]
     });
-    this.pieChart.setPosition([coordinate.x - 200, coordinate.y]);  // [12938941.292552002, 4851621.792859137]); //
+    this.pieChart.setPosition(coordinate);
     this.pieChart.setVisible(true);
   }
 
@@ -510,7 +510,7 @@ export class AppComponent implements OnInit, AfterViewInit {
       this.map.addLayer(newLayer);
       newLayer.setVisible(options.hasOwnProperty('visible') ? options.visible : true);
       return newLayer;
-    }
+    };
     // Original data
     this.shapesLayerShape = createLayer('Waterbodies shape', '../assets/waterbodies/Australia/aus25wgd_l.geojson');
     this.shapesLayerFill = createLayer('Waterbodies fill', '../assets/waterbodies/Australia/aus25wgd_r.geojson',
