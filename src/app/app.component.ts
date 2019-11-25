@@ -32,6 +32,7 @@ import {
 } from './utils';
 // import * as Highcharts from 'highcharts';
 import {SeriesPieOptions, chart, setOptions, getOptions, map, Color} from 'highcharts';
+import {HttpClient} from '@angular/common/http';
 
 @Component({
   selector: 'app-root',
@@ -53,7 +54,7 @@ export class AppComponent implements OnInit, AfterViewInit {
   shapesLayerNames: any;
   wofsWMS: any;
 
-  constructor(@Inject(DOCUMENT) private document: Document) {
+  constructor(@Inject(DOCUMENT) private document: Document, private http: HttpClient) {
   }
 
   ngAfterViewInit() {
@@ -490,42 +491,41 @@ export class AppComponent implements OnInit, AfterViewInit {
     const fillStyle = new Style({
       fill: new Fill({color: 'rgba(224, 255, 255, 0.33)'})
     });
-    this.shapesLayerShape = new VectorLayer({
-      title: 'Waterbodies shape',
-      source: new VectorSource({
-        url: '../assets/waterbodies/aus25wgd_l.geojson',
-        format: new GeoJSON(),
-        projection : 'EPSG:4326'
-      })
-    });
-    this.shapesLayerFill = new VectorLayer({
-      title: 'Waterbodies fill',
-      style: fillStyle,
-      source: new VectorSource({
-        url: '../assets/waterbodies/aus25wgd_r.geojson',
-        format: new GeoJSON(),
-        projection : 'EPSG:4326'
-      })
-    });
-    this.shapesLayerNames = new VectorLayer({
-      title: 'Waterbodies name',
-      minZoom: 8,
-      style: iconStyle,
-      source: new VectorSource({
-        url: '../assets/waterbodies/aus25wgd_p.geojson',
-        format: new GeoJSON(),
-        projection : 'EPSG:4326'
-      })
-    });
-    this.map.addLayer(this.shapesLayerShape);
-    this.map.addLayer(this.shapesLayerFill);
-    this.map.addLayer(this.shapesLayerNames);
-    this.shapesLayerShape.set('name', 'Shapes');
-    this.shapesLayerFill.set('name', 'Shapes Fill');
-    this.shapesLayerNames.set('name', 'Shapes Names');
-    this.shapesLayerShape.setVisible(true);
-    this.shapesLayerFill.setVisible(true);
-    this.shapesLayerNames.setVisible(true);
+    interface Options {
+      style?: any;
+      minZoom?: number;
+      visible?: boolean;
+    }
+    const createLayer = (title, url, options: Options = {}) => {
+      this.http.get(url).toPromise().then(d => console.log(`url exists: ${url}`)).catch(e => console.log(`URL DOES NOT EXIST: ${url}`));
+      const newLayer = new VectorLayer(Object.assign(options, {
+        title,
+        source: new VectorSource({
+          url,
+          format: new GeoJSON(),
+          projection : 'EPSG:4326'
+        })
+      }));
+      newLayer.set('name', title);
+      this.map.addLayer(newLayer);
+      newLayer.setVisible(options.hasOwnProperty('visible') ? options.visible : true);
+      return newLayer;
+    }
+    // Original data
+    this.shapesLayerShape = createLayer('Waterbodies shape', '../assets/waterbodies/Australia/aus25wgd_l.geojson');
+    this.shapesLayerFill = createLayer('Waterbodies fill', '../assets/waterbodies/Australia/aus25wgd_r.geojson',
+      {style: fillStyle});
+    this.shapesLayerNames = createLayer('Waterbodies name', '../assets/waterbodies/Australia/aus25wgd_p.geojson',
+      {style: iconStyle, minZoom: 8});
+
+    // new data but that only covers ACT + ~ 100kms square
+    this.shapesLayerShape = createLayer('i5516 flats', '../assets/waterbodies/Canberra/i5516_flats.geojson');
+    this.shapesLayerShape = createLayer('i5516 pondages', '../assets/waterbodies/Canberra/i5516_pondageareas.geojson');
+    this.shapesLayerShape = createLayer('i5516 waterCourseLines', '../assets/waterbodies/Canberra/i5516_watercourselines.geojson',
+      {visible: false});
+    this.shapesLayerShape = createLayer('i5516 waterCourseAreas', '../assets/waterbodies/Canberra/i5516_watercourseareas.geojson');
+    this.shapesLayerShape = createLayer('i5516 lakes', '../assets/waterbodies/Canberra/i5516_waterholes.geojson');
+    this.shapesLayerShape = createLayer('i5516 reservoirs', '../assets/waterbodies/Canberra/i5516_reservoirs.geojson');
   }
 
   // Water Observations from Space 25m Filtered Summary (WOfS Filtered Statistics)
@@ -544,7 +544,7 @@ export class AppComponent implements OnInit, AfterViewInit {
         extent: [ -5687813.782846, 12530995.153909, -15894844.529378, 3585760.291316 ] // -13884991, -7455066, 2870341, 6338219]
       })
     });
-    this.wofsWMS.set('name', 'Water Observations from Space 25m Filtered Summary (WOfS Filtered Statistics)');
+    this.wofsWMS.set('name', 'Water Observations from Space');  // 25m Filtered Summary (WOfS Filtered Statistics)');
     this.map.addLayer(this.wofsWMS);
     this.wofsWMS.setVisible(true);
   }

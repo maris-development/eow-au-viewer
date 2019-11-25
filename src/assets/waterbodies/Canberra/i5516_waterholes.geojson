@@ -1,0 +1,12 @@
+{
+"type": "FeatureCollection",
+"name": "i5516_waterholes",
+"features": [
+{ "type": "Feature", "properties": { "FEATTYPE": "Waterhole", "NAME": null, "PERENNIAL": "Perennial", "FEATREL": "1981\/01\/01", "ATTRREL": "1981\/01\/01", "PLANACC": 100, "SOURCE": "GEOSCIENCE AUSTRALIA", "CREATED": "2006\/05\/09", "PID": 8384098, "SYMBOL": 81, "FEATWIDTH": 0.0, "ORIENTATN": 0, "TEXTNOTE": "waterhole" }, "geometry": { "type": "Point", "coordinates": [ 148.75332, -35.91285 ] } },
+{ "type": "Feature", "properties": { "FEATTYPE": "Waterhole", "NAME": null, "PERENNIAL": "Perennial", "FEATREL": "1981\/01\/01", "ATTRREL": "1981\/01\/01", "PLANACC": 100, "SOURCE": "GEOSCIENCE AUSTRALIA", "CREATED": "2006\/05\/09", "PID": 8384097, "SYMBOL": 81, "FEATWIDTH": 0.0, "ORIENTATN": 0, "TEXTNOTE": "waterhole" }, "geometry": { "type": "Point", "coordinates": [ 148.55174, -35.79261 ] } },
+{ "type": "Feature", "properties": { "FEATTYPE": "Waterhole", "NAME": "BLUE WATERHOLES", "PERENNIAL": "Perennial", "FEATREL": "1981\/01\/01", "ATTRREL": "1981\/01\/01", "PLANACC": 100, "SOURCE": "GEOSCIENCE AUSTRALIA", "CREATED": "2006\/05\/09", "PID": 8384094, "SYMBOL": 81, "FEATWIDTH": 0.0, "ORIENTATN": 0, "TEXTNOTE": null }, "geometry": { "type": "Point", "coordinates": [ 148.68514, -35.62179 ] } },
+{ "type": "Feature", "properties": { "FEATTYPE": "Waterhole", "NAME": null, "PERENNIAL": "Perennial", "FEATREL": "1981\/01\/01", "ATTRREL": "1981\/01\/01", "PLANACC": 100, "SOURCE": "GEOSCIENCE AUSTRALIA", "CREATED": "2006\/05\/09", "PID": 8384099, "SYMBOL": 81, "FEATWIDTH": 0.0, "ORIENTATN": 0, "TEXTNOTE": "waterhole" }, "geometry": { "type": "Point", "coordinates": [ 148.66917, -35.97049 ] } },
+{ "type": "Feature", "properties": { "FEATTYPE": "Waterhole", "NAME": null, "PERENNIAL": "Perennial", "FEATREL": "1981\/01\/01", "ATTRREL": "1981\/01\/01", "PLANACC": 100, "SOURCE": "GEOSCIENCE AUSTRALIA", "CREATED": "2006\/05\/09", "PID": 8384095, "SYMBOL": 81, "FEATWIDTH": 0.0, "ORIENTATN": 0, "TEXTNOTE": "waterhole" }, "geometry": { "type": "Point", "coordinates": [ 149.13274, -35.70342 ] } },
+{ "type": "Feature", "properties": { "FEATTYPE": "Waterhole", "NAME": null, "PERENNIAL": "Perennial", "FEATREL": "1981\/01\/01", "ATTRREL": "1981\/01\/01", "PLANACC": 100, "SOURCE": "GEOSCIENCE AUSTRALIA", "CREATED": "2006\/05\/09", "PID": 8384096, "SYMBOL": 81, "FEATWIDTH": 0.0, "ORIENTATN": 0, "TEXTNOTE": "waterhole" }, "geometry": { "type": "Point", "coordinates": [ 148.54972, -35.78068 ] } }
+]
+}
