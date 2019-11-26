@@ -30,9 +30,8 @@ import {
   renderUsers,
   recentMeasurements
 } from './utils';
-// import * as Highcharts from 'highcharts';
-import {SeriesPieOptions, chart, setOptions, getOptions, map, Color} from 'highcharts';
 import {HttpClient} from '@angular/common/http';
+import {PieChart} from './pie-chart';
 
 @Component({
   selector: 'app-root',
@@ -48,13 +47,13 @@ export class AppComponent implements OnInit, AfterViewInit {
   dataLayer: any;
   allDataSource: any;
   pieChart: any;
-  highchart: any;
   shapesLayerShape: any;
   shapesLayerFill: any;
   shapesLayerNames: any;
   wofsWMS: any;
 
   constructor(@Inject(DOCUMENT) private document: Document, private http: HttpClient) {
+    this.pieChart = new PieChart();
   }
 
   ngAfterViewInit() {
@@ -207,14 +206,11 @@ export class AppComponent implements OnInit, AfterViewInit {
 
       if (features.length) {
         content.innerHTML = features.map(printDetails).join('');
-        // Draw the pie chart of FU values selected, but this printStats() used in one other place and
-        // can only have one id (since we only want one graph)
-        stats.innerHTML = (printStats(calculateStats(features), this.userStore) as string)
-              .replace('class="pieChart"', 'id="pieChart"');
+        stats.innerHTML = this.pieChart.fixForThisPieChart(printStats(calculateStats(features), this.userStore));
         element.classList.add('active');
         this.popup.setPosition(coordinate); // [28468637.79432749, 5368841.526355445]);  //
       }
-      this.addPieChart(features, coordinate);
+      this.pieChart.draw(features);
     });
 // Load users
     loadUsers().then((users) => {
@@ -287,11 +283,11 @@ export class AppComponent implements OnInit, AfterViewInit {
 
       if (features.length) {
         content.innerHTML = features.map(printDetails).join('');
-        stats.innerHTML = printStats(calculateStats(features), this.userStore);
+        stats.innerHTML = this.pieChart.fixForThisPieChart(printStats(calculateStats(features), this.userStore));
         popupElement.classList.add('active');
 
         this.popup.setPosition(coordinate);
-        this.addPieChart(features, coordinate);
+        this.pieChart.draw(features);
       }
     }, true);
   }
@@ -345,116 +341,6 @@ export class AppComponent implements OnInit, AfterViewInit {
   private clearSelectedUser() {
     this.document.querySelectorAll('.user-list .item').forEach(item => {
       item.classList.remove('selectedUser', 'box-shadow');
-    });
-  }
-
-  /**
-   * If features are passed in (since one or more clicked on) then draw PieChart containing them.  If it is empty then draw chart of all
-   * features visible.
-   *
-   * @param features - EOW Data
-   * @param coordinate - the position of the mouse click in the viewport
-   */
-  private addPieChart(features, coordinate) {
-    if (this.highchart) {
-      this.highchart.destroy();
-      this.highchart = null;
-    } else {
-      const cArray = Object.keys(colors);
-      const theFUColours = cArray.map(c => {
-        const index = (parseInt(c, 10)) % cArray.length;
-        // console.log(`colors length: ${cArray.length}, c: ${c}, color index: ${index}`);
-        return colors[index];
-      });
-      // console.table(theFUColours);
-
-      setOptions({
-        colors: map(theFUColours, (color) => {
-          return {
-            radialGradient: {
-              cx: 0.5,
-              cy: 0.3,
-              r: 0.7
-            },
-            stops: [
-              [0, color],
-              [1, new Color(color).brighten(-0.2).get('rgb')] // darken
-            ]
-          };
-        })
-      });
-    }
-
-    const aggregateFUValues = (fuValuesInFeatures) => {
-      const eowDataReducer = (acc, currentValue) => {
-        acc[currentValue.values_.fu_value] = acc.hasOwnProperty(currentValue.values_.fu_value) ? ++acc[currentValue.values_.fu_value] : 1;
-        return acc;
-      };
-      return features.reduce(eowDataReducer, {});
-    };
-    // Add zeros for all the other FUs since the colours in Highcharts pie charts are from the ordinal number of the data, NOT the value
-    // of it's "name" attribute
-    const setMissingFUsToZero = (fUValuesObj) => {
-      return Object.keys(fUValuesObj).map(i => {
-        return parseInt(i, 10);
-      });
-    };
-    const arrayToObject = (array) =>
-    array.reduce((obj, item) => {
-      obj[item] = item;
-      return obj;
-    }, {});
-    const addMissingFUValues = (existingFUs, missingFUs) => {
-      Object.keys(colors).forEach((key, index) => {
-        if (! missingFUs.hasOwnProperty(index)) {
-          existingFUs[index] = 0;
-        }
-      });
-      return existingFUs;
-    };
-
-    let eowDataFUValues = aggregateFUValues(features);
-    const arrayFUValues = setMissingFUsToZero(eowDataFUValues);
-    const arrayFUValuesObj = arrayToObject(arrayFUValues);
-
-    eowDataFUValues = addMissingFUValues(eowDataFUValues, arrayFUValuesObj);
-
-    const eowData = Object.keys(eowDataFUValues).map(k => {
-      return {name: k, y: eowDataFUValues[k]};
-    });
-    console.log(`EOWData: ${JSON.stringify(eowData)}`);
-
-    // Build the chart
-    this.highchart = chart('pieChart', {
-      chart: {
-        plotBackgroundColor: 'rgba(55, 255, 255, 0)',
-        plotBorderWidth: 0,
-        plotShadow: false,
-        type: 'pie',
-        height: '80px',
-        width: 90
-      },
-      title: {
-        text: ''  // FUIs on selected markers'
-      },
-      tooltip: {
-        pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
-      },
-      plotOptions: {
-        pie: {
-          allowPointSelect: true,
-          cursor: 'pointer',
-          dataLabels: {
-            enabled: false,
-            format: '<b>{point.name}</b>: {point.percentage:.1f} %',
-            connectorColor: 'brown'
-          }
-        }
-      },
-      series: [{
-        name: 'Share',
-        data: eowData
-      } as SeriesPieOptions]
     });
   }
 
