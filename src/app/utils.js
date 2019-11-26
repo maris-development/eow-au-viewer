@@ -134,6 +134,9 @@ export function printStats (stats, userStore) {
     <div>
       <ul>
         <li>
+            <span class="stats-value" class="pieChart"></span>
+        </li>
+        <li>
         <span class="stats-value">${stats.iphones}</span>
         <span class="stats-label">iPhones</span>
         </li>
