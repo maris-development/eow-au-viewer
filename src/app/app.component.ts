@@ -103,15 +103,7 @@ export class AppComponent implements OnInit, AfterViewInit {
       position: [0, 0],
       autoPan: true,
       autoPanMargin: 275,
-      positioning: 'bottom-center'
-    });
-
-    this.pieChart = new Overlay({
-      element: this.document.getElementById('pieChart'),
-      position: [0, 0],
-      autoPan: true,
-      autoPanMargin: 275,
-      positioning: 'bottom-center'
+      positioning: 'center-left'
     });
 
 // Style Features using ..... FU values (called for each feature on every render call)
@@ -185,8 +177,6 @@ export class AppComponent implements OnInit, AfterViewInit {
 // Attach overlay and hide it
     this.map.addOverlay(this.popup);
     this.popup.setVisible(false);
-    this.map.addOverlay(this.pieChart);
-
 
 // Click events for panels
     this.document.getElementById('clearFilterButton').addEventListener('click', (event) => {
@@ -194,7 +184,7 @@ export class AppComponent implements OnInit, AfterViewInit {
     });
 
 // Show popup with features at certain point on the map
-    this.map.on('xclick', (evt) => {
+    this.map.on('click', (evt) => {
       const {
         pixel,
         coordinate
@@ -217,7 +207,10 @@ export class AppComponent implements OnInit, AfterViewInit {
 
       if (features.length) {
         content.innerHTML = features.map(printDetails).join('');
-        stats.innerHTML = printStats(calculateStats(features), this.userStore);
+        // Draw the pie chart of FU values selected, but this printStats() used in one other place and
+        // can only have one id (since we only want one graph)
+        stats.innerHTML = (printStats(calculateStats(features), this.userStore) as string)
+              .replace('class="pieChart"', 'id="pieChart"');
         element.classList.add('active');
         this.popup.setPosition(coordinate); // [28468637.79432749, 5368841.526355445]);  //
       }
@@ -251,14 +244,6 @@ export class AppComponent implements OnInit, AfterViewInit {
       } else if (element.matches('.more-info-btn')) {
         const popupElement = element.closest('.popup-item');
         popupElement.classList.toggle('active');
-      }
-    });
-
-    this.document.querySelector('#pieChart').addEventListener('click', (event: Event) => {
-      const element = (event.target as HTMLElement);
-      if (element.matches('.close')) {
-        this.pieChart.setVisible(false);
-        this.pieChart.getElement().classList.remove('active');
       }
     });
 
@@ -438,21 +423,19 @@ export class AppComponent implements OnInit, AfterViewInit {
       return {name: k, y: eowDataFUValues[k]};
     });
     console.log(`EOWData: ${JSON.stringify(eowData)}`);
-    this.pieChart.setVisible(false);
-    const el = this.pieChart.getElement();
 
     // Build the chart
-    this.highchart = chart(el, {
+    this.highchart = chart('pieChart', {
       chart: {
-        plotBackgroundColor: 'rgba(255, 255, 255, 0)',
-        plotBorderWidth: 2,
+        plotBackgroundColor: 'rgba(55, 255, 255, 0)',
+        plotBorderWidth: 0,
         plotShadow: false,
         type: 'pie',
-        height: '200px',
-        width: 150
+        height: '80px',
+        width: 90
       },
       title: {
-        text: 'FUIs on selected markers'
+        text: ''  // FUIs on selected markers'
       },
       tooltip: {
         pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
@@ -473,8 +456,6 @@ export class AppComponent implements OnInit, AfterViewInit {
         data: eowData
       } as SeriesPieOptions]
     });
-    this.pieChart.setPosition([coordinate.x - 200, coordinate.y]);  // [12938941.292552002, 4851621.792859137]); //
-    this.pieChart.setVisible(true);
   }
 
   private addShapeFiles() {
@@ -510,7 +491,7 @@ export class AppComponent implements OnInit, AfterViewInit {
       this.map.addLayer(newLayer);
       newLayer.setVisible(options.hasOwnProperty('visible') ? options.visible : true);
       return newLayer;
-    }
+    };
     // Original data
     this.shapesLayerShape = createLayer('Waterbodies shape', '../assets/waterbodies/Australia/aus25wgd_l.geojson');
     this.shapesLayerFill = createLayer('Waterbodies fill', '../assets/waterbodies/Australia/aus25wgd_r.geojson',

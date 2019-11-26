@@ -42,7 +42,7 @@ html {
 }
 
 #popup>div {
-  padding: 1em;
+  padding: 0.1em;
 }
 
 #popup.active {
@@ -292,4 +292,8 @@ li.item {
 .layersSwitch {
   position: absolute;
   bottom: 20px;
+}
+
+.highcharts-background {
+  padding: 0;
 }
