@@ -1,4 +1,4 @@
-import {Component, AfterViewInit, OnInit, Inject} from '@angular/core';
+import {Component, OnInit, Inject, AfterViewInit} from '@angular/core';
 import {DOCUMENT} from '@angular/common';
 import debounce from 'lodash/debounce';
 import keyBy from 'lodash/keyBy';
@@ -8,7 +8,6 @@ import OSM from 'ol/source/OSM';
 import TileLayer from 'ol/layer/Tile';
 import View from 'ol/View';
 import VectorSource from 'ol/source/Vector';
-import Overlay from 'ol/Overlay';
 import VectorLayer from 'ol/layer/Vector';
 import {fromLonLat} from 'ol/proj';
 
@@ -24,7 +23,6 @@ import TileWMS from 'ol/source/TileWMS';
 
 import {
   colors,
-  printDetails,
   printStats,
   calculateStats,
   renderUsers,
@@ -32,16 +30,17 @@ import {
 } from './utils';
 import {HttpClient} from '@angular/common/http';
 import {PieChart} from './pie-chart';
+import {Popup} from './popup';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css'],
 })
-export class AppComponent implements OnInit, AfterViewInit {
+export class AppComponent implements OnInit {
   title = 'ng-eow';
   map: Map;
-  popup: any;
+  popupObject: any;
   measurementStore: any;
   userStore: any;
   dataLayer: any;
@@ -51,16 +50,25 @@ export class AppComponent implements OnInit, AfterViewInit {
   shapesLayerFill: any;
   shapesLayerNames: any;
   wofsWMS: any;
+  htmlDocument: Document;
 
   constructor(@Inject(DOCUMENT) private document: Document, private http: HttpClient) {
+    this.htmlDocument = document;
     this.pieChart = new PieChart();
-  }
-
-  ngAfterViewInit() {
-    this.map.setTarget('map');
+    // Fast datastructures to query the data
+    this.userStore = {
+      users: [],
+      userById: {},
+      getUserById(userId) {
+        return this.userById[userId] || [];
+      }
+    };
+    this.popupObject = new Popup(this.document, this.pieChart, this.userStore);
   }
 
   ngOnInit() {
+    this.popupObject.init();
+
     // The WFS provided by EyeOnWater.org for Australia data
     const WFS_URL = 'https://geoservice.maris.nl/wms/project/eyeonwater_australia?service=WFS'
       + '&version=1.0.0&request=GetFeature&typeName=eow_australia&maxFeatures=5000&outputFormat=application%2Fjson';
@@ -71,17 +79,6 @@ export class AppComponent implements OnInit, AfterViewInit {
       url: WFS_URL
     });
 
-    // console.log(`colors:`);
-    // console.table(colors);
-
-    // Fast datastructures to query the data
-    this.userStore = {
-      users: [],
-      userById: {},
-      getUserById(userId) {
-        return this.userById[userId] || [];
-      }
-    };
     this.measurementStore = {
       measurements: [],
       measurementsById: {},
@@ -96,14 +93,6 @@ export class AppComponent implements OnInit, AfterViewInit {
     };
     // Get measurements from layer after it's done loading.
     this.allDataSource.on('change', this.initialLoadMeasurements.bind(this));
-
-    this.popup = new Overlay({
-      element: this.document.getElementById('popup'),
-      position: [0, 0],
-      autoPan: true,
-      autoPanMargin: 275,
-      positioning: 'center-left'
-    });
 
 // Style Features using ..... FU values (called for each feature on every render call)
     const basicStyle = (feature, resolution) => {
@@ -159,7 +148,7 @@ export class AppComponent implements OnInit, AfterViewInit {
         center: fromLonLat([133.945313, -26.431228]),
         zoom: 4
       }),
-      controls: []
+      controls: [],
     });
 
     async function loadUsers() {
@@ -174,8 +163,10 @@ export class AppComponent implements OnInit, AfterViewInit {
     }
 
 // Attach overlay and hide it
-    this.map.addOverlay(this.popup);
-    this.popup.setVisible(false);
+    this.map.addOverlay(this.popupObject.getOverlay());
+
+    // EventHandlers cannot be registered until after they are added to the map, since the element temporarily is removed
+    this.popupObject.initEventHandlers();
 
 // Click events for panels
     this.document.getElementById('clearFilterButton').addEventListener('click', (event) => {
@@ -189,15 +180,6 @@ export class AppComponent implements OnInit, AfterViewInit {
         coordinate
       } = evt;
 
-      console.log(`Clicked on map at: ${JSON.stringify(coordinate)}`);
-      // clean up old popup and initilize some variables
-      this.popup.setVisible(false);
-      const element = this.popup.getElement();
-      const content = element.querySelector('.content');
-      const stats = element.querySelector('.stats');
-      content.innerHTML = '';
-      element.classList.remove('active');
-
       const features = [];
 
       this.map.forEachFeatureAtPixel(pixel, (feature) => {
@@ -205,12 +187,9 @@ export class AppComponent implements OnInit, AfterViewInit {
       });
 
       if (features.length) {
-        content.innerHTML = features.map(printDetails).join('');
-        stats.innerHTML = this.pieChart.fixForThisPieChart(printStats(calculateStats(features), this.userStore));
-        element.classList.add('active');
-        this.popup.setPosition(coordinate); // [28468637.79432749, 5368841.526355445]);  //
+        console.log(`Clicked on map at: ${JSON.stringify(coordinate)}`);
+        this.popupObject.draw(features, coordinate);
       }
-      this.pieChart.draw(features);
     });
 // Load users
     loadUsers().then((users) => {
@@ -230,19 +209,6 @@ export class AppComponent implements OnInit, AfterViewInit {
       const element = (event.target as HTMLElement).closest('.panel');
       element.classList.toggle('pulled');
     }));
-
-    // Popup dialog close button
-    this.document.querySelector('#popup').addEventListener('click', (event: Event) => {
-      const element = (event.target as HTMLElement);
-      if (element.matches('.close')) {
-        this.popup.setVisible(false);
-        this.popup.getElement().classList.remove('active');
-      } else if (element.matches('.more-info-btn')) {
-        const popupElement = element.closest('.popup-item');
-        popupElement.classList.toggle('active');
-      }
-    });
-
     // User List
     document.querySelector('.user-list').addEventListener('click', (event) => {
       const element = (event.target as HTMLElement).closest('.item');
@@ -271,24 +237,8 @@ export class AppComponent implements OnInit, AfterViewInit {
         zoom: 8,
         duration: 1300
       });
-      // clean up old popup and initilize some variables
-      this.popup.setVisible(false);
-      const popupElement = this.popup.getElement();
-      const content = popupElement.querySelector('.content');
-      const stats = popupElement.querySelector('.stats');
-      content.innerHTML = '';
-      popupElement.classList.remove('active');
-
       const features = [this.measurementStore.getById(id)];
-
-      if (features.length) {
-        content.innerHTML = features.map(printDetails).join('');
-        stats.innerHTML = this.pieChart.fixForThisPieChart(printStats(calculateStats(features), this.userStore));
-        popupElement.classList.add('active');
-
-        this.popup.setPosition(coordinate);
-        this.pieChart.draw(features);
-      }
+      this.popupObject.draw(features, coordinate);
     }, true);
   }
 

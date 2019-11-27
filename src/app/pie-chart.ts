@@ -2,13 +2,14 @@ import {chart, Color, SeriesPieOptions, setOptions, map as highchartsMap} from '
 import {colors} from './utils';
 
 export class PieChart {
-
+  elementId = 'pieChart';
   highchart: any;
 
   /**
    * If features are passed in (since one or more clicked on) then draw PieChart containing them.  If it is empty then draw chart of all
    * features visible.
    *
+   * @param elementId - id of Element to draw chart in to
    * @param features - EOW Data
    * @param coordinate - the position of the mouse click in the viewport
    */
@@ -82,7 +83,7 @@ export class PieChart {
     console.log(`EOWData: ${JSON.stringify(eowData)}`);
 
     // Build the chart
-    this.highchart = chart('pieChart', {
+    this.highchart = chart(this.elementId, {
       chart: {
         plotBackgroundColor: 'rgba(55, 255, 255, 0)',
         plotBorderWidth: 0,
