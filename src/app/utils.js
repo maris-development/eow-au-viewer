@@ -96,35 +96,6 @@ export function calculateStats (features) {
   })
 }
 
-// export function renderUsers (users, n = 10) {
-//   const userList = orderBy(users, ['photo_count', 'points'], ['desc', 'desc']).slice(0, n).map(user => {
-//     let itemTemplate = ` <li class="item" data-user="${user.id}">
-//     <div>
-//       <img  class="icon-thumb" src="https://eyeonwater.org/grfx/${user.icon}">
-//     </div>
-//     <div>
-//       <div class="item-nickname">${user.nickname}</div>
-//       <div class="item-photo-count">(${user.photo_count} photos)</div>
-//       <div class="item-points">${user.points} points (level ${user.level})</div>
-//     </div>
-//   </li>`
-//     return itemTemplate
-//   })
-//
-//   document.querySelector('.user-list ul').innerHTML = userList.join('\n')
-// }
-//
-// export function recentMeasurements (measurements, n = 20) {
-//   const userList = orderBy(measurements, [(f) => (new Date(f.get('date_photo'))).getTime()], ['desc']).slice(0, n).map((measurement) => {
-//     let prettyDate = DateTime.fromISO(measurement.get('date_photo')).toLocaleString(DateTime.DATE_FULL)
-//
-//     let itemTemplate = ` <li class="item measurement-item" data-coordinate="${measurement.getGeometry().getCoordinates()}" data-key="${measurement.get('n_code')}"><img src="https://eyeonwater.org/grfx/icons/small/${measurement.get('fu_value')}.png"> ${prettyDate}</li>`
-//     return itemTemplate
-//   })
-//
-//   document.querySelector('.measurement-list ul').innerHTML = userList.join('\n')
-// }
-
 export function printStats (stats, userStore) {
   return `
     <div>

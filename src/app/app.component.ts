@@ -49,14 +49,7 @@ export class AppComponent implements OnInit {
   constructor(@Inject(DOCUMENT) private document: Document, private http: HttpClient) {
     this.htmlDocument = document;
     this.pieChart = new PieChart();
-    // Fast datastructures to query the data
-    // this.userStore = {
-    //   users: [],
-    //   userById: {},
-    //   getUserById(userId) {
-    //     return this.userById[userId] || [];
-    //   }
-    // };
+
     this.userStore = new UserStore(this.document);
     this.popupObject = new Popup(this.document, this.pieChart, this.userStore);
     this.layers = new Layers(this.document, this.http);
