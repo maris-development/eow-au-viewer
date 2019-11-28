@@ -1,11 +1,3 @@
-import orderBy from 'lodash/orderBy'
-import {
-  DateTime
-} from 'luxon'
-
-// Load colors json from external file to keep things neat
-export const colors = require('./colors.json')
-
 export function getLargestAmount (collection) {
   return Object.entries(collection).reduce((prev, [item, amount]) => {
     if (amount > prev.amount) {
@@ -19,37 +11,6 @@ export function getLargestAmount (collection) {
     item: null,
     amount: -1
   })
-}
-
-export function printDetails (feature) {
-  // Removed the geometry to avoid circular reference when serializing
-  let properties = Object.assign(feature.getProperties(), {
-    geometry: '*removed*'
-  })
-
-  let details = JSON.stringify(properties, null, 2)
-
-  return `
-  <div class="popup-item">
-  <div class="metadata-row"> 
-  <div class="image">
-  <img src="${properties.image}" />
-  </div>
-  <div class="metadata"> 
-  <div class="fu-preview"  style="background:${colors[properties.fu_value]}"></div><div class="more-info-btn"></div>
-  <div> FU value: ${properties.fu_value}</div>
-  <div> Date: ${properties.date_photo}</div>
-  <div> Device:  ${properties.device_model}</div>
- </div>
- </div>
-  <div class="raw-details">
-      <h4>Details<h4>
-      <pre>
-      ${details}
-      </pre>
-    </div>
-    </div>
-  `
 }
 
 export function calculateStats (features) {
@@ -98,35 +59,6 @@ export function calculateStats (features) {
     mostUsedDevice,
     mostActiveUser
   })
-}
-
-export function renderUsers (users, n = 10) {
-  const userList = orderBy(users, ['photo_count', 'points'], ['desc', 'desc']).slice(0, n).map(user => {
-    let itemTemplate = ` <li class="item" data-user="${user.id}">
-    <div>
-      <img  class="icon-thumb" src="https://eyeonwater.org/grfx/${user.icon}">
-    </div>
-    <div>
-      <div class="item-nickname">${user.nickname}</div>
-      <div class="item-photo-count">(${user.photo_count} photos)</div>
-      <div class="item-points">${user.points} points (level ${user.level})</div>
-    </div>
-  </li>`
-    return itemTemplate
-  })
-
-  document.querySelector('.user-list ul').innerHTML = userList.join('\n')
-}
-
-export function recentMeasurements (measurements, n = 20) {
-  const userList = orderBy(measurements, [(f) => (new Date(f.get('date_photo'))).getTime()], ['desc']).slice(0, n).map((measurement) => {
-    let prettyDate = DateTime.fromISO(measurement.get('date_photo')).toLocaleString(DateTime.DATE_FULL)
-
-    let itemTemplate = ` <li class="item measurement-item" data-coordinate="${measurement.getGeometry().getCoordinates()}" data-key="${measurement.get('n_code')}"><img src="https://eyeonwater.org/grfx/icons/small/${measurement.get('fu_value')}.png"> ${prettyDate}</li>`
-    return itemTemplate
-  })
-
-  document.querySelector('.measurement-list ul').innerHTML = userList.join('\n')
 }
 
 export function printStats (stats, userStore) {
