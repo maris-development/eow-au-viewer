@@ -1,5 +1,5 @@
 import {chart, Color, SeriesPieOptions, setOptions, map as highchartsMap} from 'highcharts';
-import {colors} from './utils';
+import colors from './colors.json';
 
 export class PieChart {
   elementId = 'pieChart';

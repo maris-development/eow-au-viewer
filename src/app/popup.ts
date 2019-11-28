@@ -1,10 +1,10 @@
 import Overlay from 'ol/Overlay';
 import Map from 'ol/Map';
 import {
-  printDetails,
   printStats,
   calculateStats,
 } from './utils';
+import colors from './colors.json';
 
 export class Popup {
   elementId = 'popup';
@@ -71,7 +71,7 @@ export class Popup {
     element.classList.remove('active');
 
     if (features.length) {
-      content.innerHTML = features.map(printDetails).join('');
+      content.innerHTML = features.map(this.printDetails).join('');
       stats.innerHTML = this.pieChart.fixForThisPieChart(printStats(calculateStats(features), this.userStore));
       element.classList.add('active');
       this.popup.setPosition(coordinate); // [28468637.79432749, 5368841.526355445]);  //
@@ -80,6 +80,38 @@ export class Popup {
     } else {
       this.popup.setVisible(false);
     }
+  }
+
+  private printDetails(feature) {
+    // Removed the geometry to avoid circular reference when serializing
+    const properties = Object.assign(feature.getProperties(), {
+      geometry: '*removed*'
+    });
+
+    const details = JSON.stringify(properties, null, 2);
+
+    return `
+      <div class="popup-item">
+        <div class="metadata-row">
+          <div class="image">
+            <img src="${properties.image}" />
+          </div>
+          <div class="metadata">
+            <div class="fu-preview"  style="background:${colors[properties.fu_value]}"></div>
+            <div class="more-info-btn"></div>
+            <div> FU value: ${properties.fu_value}</div>
+            <div> Date: ${properties.date_photo}</div>
+            <div> Device:  ${properties.device_model}</div>
+          </div>
+        </div>
+        <div class="raw-details">
+          <h4>Details<h4>
+          <pre>
+          ${details}
+          </pre>
+        </div>
+      </div>
+    `;
   }
 
 }

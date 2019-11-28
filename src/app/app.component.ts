@@ -18,10 +18,10 @@ import {
 } from 'ol/style';
 
 import {
-  colors,
   printStats,
   calculateStats,
 } from './utils';
+import colors from './colors.json';
 import {HttpClient} from '@angular/common/http';
 import {PieChart} from './pie-chart';
 import {Popup} from './popup';
