@@ -1,7 +1,4 @@
 import orderBy from 'lodash/orderBy'
-import {
-  DateTime
-} from 'luxon'
 
 // Load colors json from external file to keep things neat
 export const colors = require('./colors.json')
@@ -117,17 +114,17 @@ export function renderUsers (users, n = 10) {
 
   document.querySelector('.user-list ul').innerHTML = userList.join('\n')
 }
-
-export function recentMeasurements (measurements, n = 20) {
-  const userList = orderBy(measurements, [(f) => (new Date(f.get('date_photo'))).getTime()], ['desc']).slice(0, n).map((measurement) => {
-    let prettyDate = DateTime.fromISO(measurement.get('date_photo')).toLocaleString(DateTime.DATE_FULL)
-
-    let itemTemplate = ` <li class="item measurement-item" data-coordinate="${measurement.getGeometry().getCoordinates()}" data-key="${measurement.get('n_code')}"><img src="https://eyeonwater.org/grfx/icons/small/${measurement.get('fu_value')}.png"> ${prettyDate}</li>`
-    return itemTemplate
-  })
-
-  document.querySelector('.measurement-list ul').innerHTML = userList.join('\n')
-}
+//
+// export function recentMeasurements (measurements, n = 20) {
+//   const userList = orderBy(measurements, [(f) => (new Date(f.get('date_photo'))).getTime()], ['desc']).slice(0, n).map((measurement) => {
+//     let prettyDate = DateTime.fromISO(measurement.get('date_photo')).toLocaleString(DateTime.DATE_FULL)
+//
+//     let itemTemplate = ` <li class="item measurement-item" data-coordinate="${measurement.getGeometry().getCoordinates()}" data-key="${measurement.get('n_code')}"><img src="https://eyeonwater.org/grfx/icons/small/${measurement.get('fu_value')}.png"> ${prettyDate}</li>`
+//     return itemTemplate
+//   })
+//
+//   document.querySelector('.measurement-list ul').innerHTML = userList.join('\n')
+// }
 
 export function printStats (stats, userStore) {
   return `
