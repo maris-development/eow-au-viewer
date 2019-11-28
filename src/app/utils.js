@@ -1,4 +1,3 @@
-import orderBy from 'lodash/orderBy'
 
 // Load colors json from external file to keep things neat
 export const colors = require('./colors.json')
@@ -97,23 +96,23 @@ export function calculateStats (features) {
   })
 }
 
-export function renderUsers (users, n = 10) {
-  const userList = orderBy(users, ['photo_count', 'points'], ['desc', 'desc']).slice(0, n).map(user => {
-    let itemTemplate = ` <li class="item" data-user="${user.id}">
-    <div>
-      <img  class="icon-thumb" src="https://eyeonwater.org/grfx/${user.icon}">
-    </div>
-    <div>
-      <div class="item-nickname">${user.nickname}</div>
-      <div class="item-photo-count">(${user.photo_count} photos)</div>
-      <div class="item-points">${user.points} points (level ${user.level})</div>
-    </div>
-  </li>`
-    return itemTemplate
-  })
-
-  document.querySelector('.user-list ul').innerHTML = userList.join('\n')
-}
+// export function renderUsers (users, n = 10) {
+//   const userList = orderBy(users, ['photo_count', 'points'], ['desc', 'desc']).slice(0, n).map(user => {
+//     let itemTemplate = ` <li class="item" data-user="${user.id}">
+//     <div>
+//       <img  class="icon-thumb" src="https://eyeonwater.org/grfx/${user.icon}">
+//     </div>
+//     <div>
+//       <div class="item-nickname">${user.nickname}</div>
+//       <div class="item-photo-count">(${user.photo_count} photos)</div>
+//       <div class="item-points">${user.points} points (level ${user.level})</div>
+//     </div>
+//   </li>`
+//     return itemTemplate
+//   })
+//
+//   document.querySelector('.user-list ul').innerHTML = userList.join('\n')
+// }
 //
 // export function recentMeasurements (measurements, n = 20) {
 //   const userList = orderBy(measurements, [(f) => (new Date(f.get('date_photo'))).getTime()], ['desc']).slice(0, n).map((measurement) => {

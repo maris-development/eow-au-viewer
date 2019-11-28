@@ -1,7 +1,6 @@
 import {Component, OnInit, Inject, AfterViewInit} from '@angular/core';
 import {DOCUMENT} from '@angular/common';
 import debounce from 'lodash/debounce';
-import keyBy from 'lodash/keyBy';
 import Map from 'ol/Map';
 import OSM from 'ol/source/OSM';
 import TileLayer from 'ol/layer/Tile';
@@ -22,13 +21,13 @@ import {
   colors,
   printStats,
   calculateStats,
-  renderUsers,
 } from './utils';
 import {HttpClient} from '@angular/common/http';
 import {PieChart} from './pie-chart';
 import {Popup} from './popup';
 import {Layers} from './layers';
 import {MeasurementStore} from './measurement-store';
+import {UserStore} from './users';
 
 @Component({
   selector: 'app-root',
@@ -40,7 +39,7 @@ export class AppComponent implements OnInit {
   map: Map;
   popupObject: any;
   measurementStore: MeasurementStore;
-  userStore: any;
+  userStore: UserStore;
   dataLayer: any;
   allDataSource: any;
   pieChart: any;
@@ -51,13 +50,14 @@ export class AppComponent implements OnInit {
     this.htmlDocument = document;
     this.pieChart = new PieChart();
     // Fast datastructures to query the data
-    this.userStore = {
-      users: [],
-      userById: {},
-      getUserById(userId) {
-        return this.userById[userId] || [];
-      }
-    };
+    // this.userStore = {
+    //   users: [],
+    //   userById: {},
+    //   getUserById(userId) {
+    //     return this.userById[userId] || [];
+    //   }
+    // };
+    this.userStore = new UserStore(this.document);
     this.popupObject = new Popup(this.document, this.pieChart, this.userStore);
     this.layers = new Layers(this.document, this.http);
     this.measurementStore = new MeasurementStore();
@@ -68,26 +68,8 @@ export class AppComponent implements OnInit {
     this.popupObject.init(this.map);
     this.measurementStore.init(this.map, this.dataLayer, this.allDataSource);
     this.layers.addLayers(this.map);
+    this.userStore.init();
 
-    const USER_SERVICE = 'https://www.eyeonwater.org/api/users';
-
-    async function loadUsers() {
-      // TODO I'm curious as to if this is correct under Angular
-      const response = await window.fetch(USER_SERVICE);
-      const {
-        results: {
-          users
-        }
-      } = await response.json();
-      return users;
-    }
-
-// Load users
-    loadUsers().then((users) => {
-      this.userStore.users = users;
-      this.userStore.userById = keyBy(this.userStore.users, 'id');
-      renderUsers(this.userStore.users);
-    });
     this.setupEventHandlers();
   }
 
@@ -185,7 +167,7 @@ export class AppComponent implements OnInit {
       const userId = element.getAttribute('data-user');
 
       if (this.measurementStore.showMeasurements(userId)) {
-        this.clearSelectedUser();
+        this.userStore.clearSelectedUser();
         element.classList.add('selectedUser', 'box-shadow');
         this.toggleFilterButton(true);
       }
@@ -220,7 +202,7 @@ export class AppComponent implements OnInit {
 
   private clearFilter() {
     this.dataLayer.setSource(this.allDataSource);
-    this.clearSelectedUser();
+    this.userStore.clearSelectedUser();
     this.measurementStore.clearFilter();
     this.map.getView().fit(this.dataLayer.getSource().getExtent(), {duration: 1300});
     this.toggleFilterButton(false);
@@ -229,11 +211,5 @@ export class AppComponent implements OnInit {
   private toggleFilterButton(state = false) {
     const element = this.document.getElementById('clearFilterButton');
     element.classList.toggle('hidden', !state);
-  }
-
-  private clearSelectedUser() {
-    this.document.querySelectorAll('.user-list .item').forEach(item => {
-      item.classList.remove('selectedUser', 'box-shadow');
-    });
   }
 }
