@@ -71,19 +71,6 @@ export class AppComponent implements OnInit {
 
     const USER_SERVICE = 'https://www.eyeonwater.org/api/users';
 
-    // this.measurementStore = {
-    //   measurements: [],
-    //   measurementsById: {},
-    //   measurementsByOwner: {},
-    //   getByOwner(userId) {
-    //     return this.measurementsByOwner[userId] || [];
-    //   },
-    //   getById(id) {
-    //     return this.measurementsById[id] || [];
-    //   }
-    //
-    // };
-
     async function loadUsers() {
       // TODO I'm curious as to if this is correct under Angular
       const response = await window.fetch(USER_SERVICE);
@@ -94,11 +81,6 @@ export class AppComponent implements OnInit {
       } = await response.json();
       return users;
     }
-
-// Click events for panels
-//     this.document.getElementById('clearFilterButton').addEventListener('click', (event) => {
-//       this.clearFilter();
-//     });
 
 // Load users
     loadUsers().then((users) => {
@@ -236,39 +218,6 @@ export class AppComponent implements OnInit {
     this.allDataSource.on('change', this.measurementStore.initialLoadMeasurements.bind(this.measurementStore));
   }
 
-  // private initialLoadMeasurements(event) {
-  //   const source = event.target;
-  //   if (!source.loading) {
-  //     const features = this.allDataSource.getFeatures();
-  //     // Store the measurements in easy to access data structure
-  //     this.measurementStore.measurements = features;
-  //     this.measurementStore.measurementsById = keyBy(features, f => f.get('n_code'));
-  //     this.measurementStore.measurementsByOwner = groupBy(features, f => f.get('user_n_code'));
-  //
-  //     recentMeasurements(this.measurementStore.measurements);
-  //     this.allDataSource.un('change', this.initialLoadMeasurements);
-  //   }
-  // }
-  //
-
-  // private showMeasurements(userId = null) {
-  //   const newSource = new VectorSource();
-  //   const selection = this.measurementStore.getByOwner(userId);
-  //   if (!selection.length) {
-  //     return false;
-  //   }
-  //   newSource.addFeatures(selection);
-  //   this.map.getView().fit(newSource.getExtent(), {
-  //     size: this.map.getSize(),
-  //     padding: [100, 100, 100, 100],
-  //     nearest: false,
-  //     duration: 1300
-  //   });
-  //   this.dataLayer.setSource(newSource);
-  //   recentMeasurements(selection);
-  //   return true;
-  // }
-  //
   private clearFilter() {
     this.dataLayer.setSource(this.allDataSource);
     this.clearSelectedUser();
