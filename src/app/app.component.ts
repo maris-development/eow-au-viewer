@@ -5,19 +5,6 @@ import OSM from 'ol/source/OSM';
 import TileLayer from 'ol/layer/Tile';
 import View from 'ol/View';
 import {fromLonLat} from 'ol/proj';
-
-// import CircleStyle from 'ol/style/Circle';
-// import {
-//   Style,
-//   Stroke,
-//   Fill
-// } from 'ol/style';
-//
-// import {
-//   printStats,
-//   calculateStats,
-// } from './utils';
-// import colors from './colors.json';
 import {HttpClient} from '@angular/common/http';
 import {PieChart} from './pie-chart';
 import {Popup} from './popup';
@@ -67,50 +54,6 @@ export class AppComponent implements OnInit {
   }
 
   private initMap() {
-    // const WFS_URL = 'https://geoservice.maris.nl/wms/project/eyeonwater_australia?service=WFS'
-    //   + '&version=1.0.0&request=GetFeature&typeName=eow_australia&maxFeatures=5000&outputFormat=application%2Fjson';
-    // const styleCache = {};
-
-    // this.allDataSource = new VectorSource({
-    //   format: new GeoJSON(),
-    //   url: WFS_URL
-    // });
-
-// Style Features using ..... FU values (called for each feature on every render call)
-//     const basicStyle = (feature, resolution) => {
-//       const fuValue = feature.get('fu_value');
-//       const styleKey = `${fuValue}_${resolution}`;
-//       // Avoid some unnecessary computation
-//       if (styleCache[styleKey]) {
-//         return styleCache[styleKey];
-//       }
-//       feature.set('visible', true);
-//       const styleOptions = {
-//         image: new CircleStyle({
-//           radius: this.map.getView().getZoom() * Math.log2(5),
-//           stroke: new Stroke({
-//             color: 'white'
-//           }),
-//           fill: new Fill({
-//             color: colors[fuValue]
-//           })
-//         })
-//       };
-//
-//       styleCache[styleKey] = new Style(styleOptions);
-//       return styleCache[styleKey];
-//     };
-//     this.dataLayer = new VectorLayer({
-//       source: this.allDataSource,
-//       style: basicStyle
-//     });
-//     this.dataLayer.set('name', 'EOW Data');
-//
-//     this.dataLayer.on('change', debounce(({target}) => {
-//       // Populate datalayer
-//       const element = this.document.querySelector('.sub-header-stats') as HTMLElement;
-//       element.innerHTML = printStats(calculateStats(target.getSource().getFeatures()), this.userStore);
-//     }, 200));
     const mainMap = new TileLayer({
       source: new OSM()
     });
@@ -120,7 +63,6 @@ export class AppComponent implements OnInit {
       target: 'map',
       layers: [
         mainMap,
-        // this.dataLayer
       ],
       view: new View({
         center: fromLonLat([133.945313, -26.431228]),
@@ -198,7 +140,7 @@ export class AppComponent implements OnInit {
     this.map.getView().fit(this.dataLayer.getSource().getExtent(), {duration: 1300});
     this.toggleFilterButton(false);
   }
-  //
+
   private toggleFilterButton(state = false) {
     const element = this.document.getElementById('clearFilterButton');
     element.classList.toggle('hidden', !state);
