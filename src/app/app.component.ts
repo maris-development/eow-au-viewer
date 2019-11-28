@@ -68,15 +68,7 @@ export class AppComponent implements OnInit {
     this.popupObject.init(this.map);
     this.layers.addLayers(this.map);
 
-    // The WFS provided by EyeOnWater.org for Australia data
-    // const WFS_URL = 'https://geoservice.maris.nl/wms/project/eyeonwater_australia?service=WFS'
-    //   + '&version=1.0.0&request=GetFeature&typeName=eow_australia&maxFeatures=5000&outputFormat=application%2Fjson';
     const USER_SERVICE = 'https://www.eyeonwater.org/api/users';
-    // const styleCache = {};
-    // this.allDataSource = new VectorSource({
-    //   format: new GeoJSON(),
-    //   url: WFS_URL
-    // });
 
     this.measurementStore = {
       measurements: [],
@@ -90,65 +82,6 @@ export class AppComponent implements OnInit {
       }
 
     };
-    // Get measurements from layer after it's done loading.
-//     this.allDataSource.on('change', this.initialLoadMeasurements.bind(this));
-//
-// // Style Features using ..... FU values (called for each feature on every render call)
-//     const basicStyle = (feature, resolution) => {
-//       const fuValue = feature.get('fu_value');
-//       const styleKey = `${fuValue}_${resolution}`;
-//       // Avoid some unnecessary computation
-//       if (styleCache[styleKey]) {
-//         return styleCache[styleKey];
-//       }
-//       feature.set('visible', true);
-//       const styleOptions = {
-//         image: new CircleStyle({
-//           radius: this.map.getView().getZoom() * Math.log2(5),
-//           stroke: new Stroke({
-//             color: 'white'
-//           }),
-//           fill: new Fill({
-//             color: colors[fuValue]
-//           })
-//         })
-//       };
-//
-//       styleCache[styleKey] = new Style(styleOptions);
-//       return styleCache[styleKey];
-//     };
-
-    // this.dataLayer = new VectorLayer({
-    //   source: this.allDataSource,
-    //   style: basicStyle
-    // });
-    // this.dataLayer.set('name', 'EOW Data');
-    //
-    // this.dataLayer.on('change', debounce(({
-    //                                         target
-    //                                       }) => {
-    //   // Populate datalayer
-    //   const element = this.document.querySelector('.sub-header-stats') as HTMLElement;
-    //   element.innerHTML = printStats(calculateStats(target.getSource().getFeatures()), this.userStore);
-    // }, 200));
-
-    // const mainMap = new TileLayer({
-    //   source: new OSM()
-    // });
-    // mainMap.set('name', 'Main map');
-    //
-    // this.map = new Map({
-    //   target: 'map',
-    //   layers: [
-    //     mainMap,
-    //     this.dataLayer
-    //   ],
-    //   view: new View({
-    //     center: fromLonLat([133.945313, -26.431228]),
-    //     zoom: 4
-    //   }),
-    //   controls: [],
-    // });
 
     async function loadUsers() {
       // TODO I'm curious as to if this is correct under Angular
@@ -161,41 +94,17 @@ export class AppComponent implements OnInit {
       return users;
     }
 
-// Attach overlay and hide it
-//     this.map.addOverlay(this.popupObject.getOverlay());
-
 // Click events for panels
     this.document.getElementById('clearFilterButton').addEventListener('click', (event) => {
       this.clearFilter();
     });
 
-// Show popup with features at certain point on the map
-//     this.map.on('click', (evt) => {
-//       const {
-//         pixel,
-//         coordinate
-//       } = evt;
-//
-//       const features = [];
-//
-//       this.map.forEachFeatureAtPixel(pixel, (feature) => {
-//         features.push(feature);
-//       });
-//
-//       if (features.length) {
-//         console.log(`Clicked on map at: ${JSON.stringify(coordinate)}`);
-//         this.popupObject.draw(features, coordinate);
-//       }
-//     });
 // Load users
     loadUsers().then((users) => {
       this.userStore.users = users;
       this.userStore.userById = keyBy(this.userStore.users, 'id');
       renderUsers(this.userStore.users);
     });
-    // this.addShapeFiles();
-    // this.addGADEAWOFS();
-    // this.setupLayerSelectionMenu();
     this.setupEventHandlers();
   }
 
