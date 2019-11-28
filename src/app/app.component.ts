@@ -11,7 +11,7 @@ import {Popup} from './popup';
 import {Layers} from './layers';
 import {MeasurementStore} from './measurement-store';
 import {UserStore} from './user-store';
-import {EowData} from './eow-data';
+import {EowDataLayer} from './eow-data-layer';
 
 @Component({
   selector: 'app-root',
@@ -24,7 +24,7 @@ export class AppComponent implements OnInit {
   popupObject: any;
   measurementStore: MeasurementStore;
   userStore: UserStore;
-  eowData: EowData;
+  eowData: EowDataLayer;
   dataLayer: any;
   allDataSource: any;
   pieChart: any;
@@ -39,7 +39,7 @@ export class AppComponent implements OnInit {
     this.popupObject = new Popup(this.document, this.pieChart, this.userStore);
     this.layers = new Layers(this.document, this.http);
     this.measurementStore = new MeasurementStore();
-    this.eowData = new EowData();
+    this.eowData = new EowDataLayer();
   }
 
   ngOnInit() {

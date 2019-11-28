@@ -140,7 +140,7 @@ export class Layers {
       // Set state the first time
       setTimeout(() => {
         checkbox.checked = layer.getVisible();
-      }, 1000);
+      }, 200);
     }
   }
 }

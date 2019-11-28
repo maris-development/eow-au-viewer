@@ -21,7 +21,7 @@ import {MeasurementStore} from './measurement-store';
 const WFS_URL = 'https://geoservice.maris.nl/wms/project/eyeonwater_australia?service=WFS'
   + '&version=1.0.0&request=GetFeature&typeName=eow_australia&maxFeatures=5000&outputFormat=application%2Fjson';
 
-export class EowData {
+export class EowDataLayer {
   map: Map;
   htmlDocument: Document;
   userStore: UserStore;
