@@ -30,6 +30,7 @@ import {HttpClient} from '@angular/common/http';
 import {PieChart} from './pie-chart';
 import {Popup} from './popup';
 import {Layers} from './layers';
+import {MeasurementStore} from './measurement-store';
 
 @Component({
   selector: 'app-root',
@@ -40,7 +41,7 @@ export class AppComponent implements OnInit {
   title = 'ng-eow';
   map: Map;
   popupObject: any;
-  measurementStore: any;
+  measurementStore: MeasurementStore;
   userStore: any;
   dataLayer: any;
   allDataSource: any;
@@ -61,6 +62,7 @@ export class AppComponent implements OnInit {
     };
     this.popupObject = new Popup(this.document, this.pieChart, this.userStore);
     this.layers = new Layers(this.document, this.http);
+    this.measurementStore = new MeasurementStore(this.map);
   }
 
   ngOnInit() {
@@ -70,18 +72,18 @@ export class AppComponent implements OnInit {
 
     const USER_SERVICE = 'https://www.eyeonwater.org/api/users';
 
-    this.measurementStore = {
-      measurements: [],
-      measurementsById: {},
-      measurementsByOwner: {},
-      getByOwner(userId) {
-        return this.measurementsByOwner[userId] || [];
-      },
-      getById(id) {
-        return this.measurementsById[id] || [];
-      }
-
-    };
+    // this.measurementStore = {
+    //   measurements: [],
+    //   measurementsById: {},
+    //   measurementsByOwner: {},
+    //   getByOwner(userId) {
+    //     return this.measurementsByOwner[userId] || [];
+    //   },
+    //   getById(id) {
+    //     return this.measurementsById[id] || [];
+    //   }
+    //
+    // };
 
     async function loadUsers() {
       // TODO I'm curious as to if this is correct under Angular
