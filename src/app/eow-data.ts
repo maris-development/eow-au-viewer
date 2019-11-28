@@ -15,7 +15,7 @@ import {
   calculateStats,
 } from './utils';
 import colors from './colors.json';
-import {UserStore} from './users';
+import {UserStore} from './user-store';
 import {MeasurementStore} from './measurement-store';
 
 const WFS_URL = 'https://geoservice.maris.nl/wms/project/eyeonwater_australia?service=WFS'

@@ -10,7 +10,7 @@ import {PieChart} from './pie-chart';
 import {Popup} from './popup';
 import {Layers} from './layers';
 import {MeasurementStore} from './measurement-store';
-import {UserStore} from './users';
+import {UserStore} from './user-store';
 import {EowData} from './eow-data';
 
 @Component({
