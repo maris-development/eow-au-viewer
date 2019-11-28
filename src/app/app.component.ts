@@ -18,8 +18,6 @@ import {
   Stroke,
   Fill
 } from 'ol/style';
-import Icon from 'ol/style/Icon';
-import TileWMS from 'ol/source/TileWMS';
 
 import {
   colors,
@@ -31,6 +29,7 @@ import {
 import {HttpClient} from '@angular/common/http';
 import {PieChart} from './pie-chart';
 import {Popup} from './popup';
+import {Layers} from './layers';
 
 @Component({
   selector: 'app-root',
@@ -46,10 +45,7 @@ export class AppComponent implements OnInit {
   dataLayer: any;
   allDataSource: any;
   pieChart: any;
-  shapesLayerShape: any;
-  shapesLayerFill: any;
-  shapesLayerNames: any;
-  wofsWMS: any;
+  layers: Layers;
   htmlDocument: Document;
 
   constructor(@Inject(DOCUMENT) private document: Document, private http: HttpClient) {
@@ -64,20 +60,23 @@ export class AppComponent implements OnInit {
       }
     };
     this.popupObject = new Popup(this.document, this.pieChart, this.userStore);
+    this.layers = new Layers(this.document, this.http);
   }
 
   ngOnInit() {
-    this.popupObject.init();
+    this.initMap();
+    this.popupObject.init(this.map);
+    this.layers.addLayers(this.map);
 
     // The WFS provided by EyeOnWater.org for Australia data
-    const WFS_URL = 'https://geoservice.maris.nl/wms/project/eyeonwater_australia?service=WFS'
-      + '&version=1.0.0&request=GetFeature&typeName=eow_australia&maxFeatures=5000&outputFormat=application%2Fjson';
+    // const WFS_URL = 'https://geoservice.maris.nl/wms/project/eyeonwater_australia?service=WFS'
+    //   + '&version=1.0.0&request=GetFeature&typeName=eow_australia&maxFeatures=5000&outputFormat=application%2Fjson';
     const USER_SERVICE = 'https://www.eyeonwater.org/api/users';
-    const styleCache = {};
-    this.allDataSource = new VectorSource({
-      format: new GeoJSON(),
-      url: WFS_URL
-    });
+    // const styleCache = {};
+    // this.allDataSource = new VectorSource({
+    //   format: new GeoJSON(),
+    //   url: WFS_URL
+    // });
 
     this.measurementStore = {
       measurements: [],
@@ -92,6 +91,123 @@ export class AppComponent implements OnInit {
 
     };
     // Get measurements from layer after it's done loading.
+//     this.allDataSource.on('change', this.initialLoadMeasurements.bind(this));
+//
+// // Style Features using ..... FU values (called for each feature on every render call)
+//     const basicStyle = (feature, resolution) => {
+//       const fuValue = feature.get('fu_value');
+//       const styleKey = `${fuValue}_${resolution}`;
+//       // Avoid some unnecessary computation
+//       if (styleCache[styleKey]) {
+//         return styleCache[styleKey];
+//       }
+//       feature.set('visible', true);
+//       const styleOptions = {
+//         image: new CircleStyle({
+//           radius: this.map.getView().getZoom() * Math.log2(5),
+//           stroke: new Stroke({
+//             color: 'white'
+//           }),
+//           fill: new Fill({
+//             color: colors[fuValue]
+//           })
+//         })
+//       };
+//
+//       styleCache[styleKey] = new Style(styleOptions);
+//       return styleCache[styleKey];
+//     };
+
+    // this.dataLayer = new VectorLayer({
+    //   source: this.allDataSource,
+    //   style: basicStyle
+    // });
+    // this.dataLayer.set('name', 'EOW Data');
+    //
+    // this.dataLayer.on('change', debounce(({
+    //                                         target
+    //                                       }) => {
+    //   // Populate datalayer
+    //   const element = this.document.querySelector('.sub-header-stats') as HTMLElement;
+    //   element.innerHTML = printStats(calculateStats(target.getSource().getFeatures()), this.userStore);
+    // }, 200));
+
+    // const mainMap = new TileLayer({
+    //   source: new OSM()
+    // });
+    // mainMap.set('name', 'Main map');
+    //
+    // this.map = new Map({
+    //   target: 'map',
+    //   layers: [
+    //     mainMap,
+    //     this.dataLayer
+    //   ],
+    //   view: new View({
+    //     center: fromLonLat([133.945313, -26.431228]),
+    //     zoom: 4
+    //   }),
+    //   controls: [],
+    // });
+
+    async function loadUsers() {
+      // TODO I'm curious as to if this is correct under Angular
+      const response = await window.fetch(USER_SERVICE);
+      const {
+        results: {
+          users
+        }
+      } = await response.json();
+      return users;
+    }
+
+// Attach overlay and hide it
+//     this.map.addOverlay(this.popupObject.getOverlay());
+
+// Click events for panels
+    this.document.getElementById('clearFilterButton').addEventListener('click', (event) => {
+      this.clearFilter();
+    });
+
+// Show popup with features at certain point on the map
+//     this.map.on('click', (evt) => {
+//       const {
+//         pixel,
+//         coordinate
+//       } = evt;
+//
+//       const features = [];
+//
+//       this.map.forEachFeatureAtPixel(pixel, (feature) => {
+//         features.push(feature);
+//       });
+//
+//       if (features.length) {
+//         console.log(`Clicked on map at: ${JSON.stringify(coordinate)}`);
+//         this.popupObject.draw(features, coordinate);
+//       }
+//     });
+// Load users
+    loadUsers().then((users) => {
+      this.userStore.users = users;
+      this.userStore.userById = keyBy(this.userStore.users, 'id');
+      renderUsers(this.userStore.users);
+    });
+    // this.addShapeFiles();
+    // this.addGADEAWOFS();
+    // this.setupLayerSelectionMenu();
+    this.setupEventHandlers();
+  }
+
+  private initMap() {
+    const WFS_URL = 'https://geoservice.maris.nl/wms/project/eyeonwater_australia?service=WFS'
+      + '&version=1.0.0&request=GetFeature&typeName=eow_australia&maxFeatures=5000&outputFormat=application%2Fjson';
+    const styleCache = {};
+
+    this.allDataSource = new VectorSource({
+      format: new GeoJSON(),
+      url: WFS_URL
+    });
     this.allDataSource.on('change', this.initialLoadMeasurements.bind(this));
 
 // Style Features using ..... FU values (called for each feature on every render call)
@@ -118,7 +234,6 @@ export class AppComponent implements OnInit {
       styleCache[styleKey] = new Style(styleOptions);
       return styleCache[styleKey];
     };
-
     this.dataLayer = new VectorLayer({
       source: this.allDataSource,
       style: basicStyle
@@ -132,7 +247,6 @@ export class AppComponent implements OnInit {
       const element = this.document.querySelector('.sub-header-stats') as HTMLElement;
       element.innerHTML = printStats(calculateStats(target.getSource().getFeatures()), this.userStore);
     }, 200));
-
     const mainMap = new TileLayer({
       source: new OSM()
     });
@@ -151,29 +265,6 @@ export class AppComponent implements OnInit {
       controls: [],
     });
 
-    async function loadUsers() {
-      // TODO I'm curious as to if this is correct under Angular
-      const response = await window.fetch(USER_SERVICE);
-      const {
-        results: {
-          users
-        }
-      } = await response.json();
-      return users;
-    }
-
-// Attach overlay and hide it
-    this.map.addOverlay(this.popupObject.getOverlay());
-
-    // EventHandlers cannot be registered until after they are added to the map, since the element temporarily is removed
-    this.popupObject.initEventHandlers();
-
-// Click events for panels
-    this.document.getElementById('clearFilterButton').addEventListener('click', (event) => {
-      this.clearFilter();
-    });
-
-// Show popup with features at certain point on the map
     this.map.on('click', (evt) => {
       const {
         pixel,
@@ -191,19 +282,9 @@ export class AppComponent implements OnInit {
         this.popupObject.draw(features, coordinate);
       }
     });
-// Load users
-    loadUsers().then((users) => {
-      this.userStore.users = users;
-      this.userStore.userById = keyBy(this.userStore.users, 'id');
-      renderUsers(this.userStore.users);
-    });
-    this.addShapeFiles();
-    this.addGADEAWOFS();
-    this.setupLayerSelectionMenu();
-    this.setupEventHandlers();
   }
 
-  setupEventHandlers() {
+  private setupEventHandlers() {
     // Pull tabs of Most Active Users and Recent Measurements
     this.document.querySelectorAll('.pull-tab').forEach(i => i.addEventListener('click', (event: Event) => {
       const element = (event.target as HTMLElement).closest('.panel');
@@ -292,118 +373,5 @@ export class AppComponent implements OnInit {
     this.document.querySelectorAll('.user-list .item').forEach(item => {
       item.classList.remove('selectedUser', 'box-shadow');
     });
-  }
-
-  private addShapeFiles() {
-    const iconStyle = new Style({
-      image: new Icon({
-        anchor: [0.5, 46],
-        anchorXUnits: 'fraction',
-        anchorYUnits: 'pixels',
-        opacity: 0.75,
-        scale: 0.02,
-        src: '../assets/icon.png'
-      })
-    });
-    const fillStyle = new Style({
-      fill: new Fill({color: 'rgba(224, 255, 255, 0.33)'})
-    });
-    interface Options {
-      style?: any;
-      minZoom?: number;
-      visible?: boolean;
-    }
-    const createLayer = (title, url, options: Options = {}) => {
-      this.http.get(url).toPromise().then(d => console.log(`url exists: ${url}`)).catch(e => console.log(`URL DOES NOT EXIST: ${url}`));
-      const newLayer = new VectorLayer(Object.assign(options, {
-        title,
-        source: new VectorSource({
-          url,
-          format: new GeoJSON(),
-          projection : 'EPSG:4326'
-        })
-      }));
-      newLayer.set('name', title);
-      this.map.addLayer(newLayer);
-      newLayer.setVisible(options.hasOwnProperty('visible') ? options.visible : true);
-      return newLayer;
-    };
-    // Original data
-    this.shapesLayerShape = createLayer('Waterbodies shape', '../assets/waterbodies/Australia/aus25wgd_l.geojson');
-    this.shapesLayerFill = createLayer('Waterbodies fill', '../assets/waterbodies/Australia/aus25wgd_r.geojson',
-      {style: fillStyle});
-    this.shapesLayerNames = createLayer('Waterbodies name', '../assets/waterbodies/Australia/aus25wgd_p.geojson',
-      {style: iconStyle, minZoom: 8});
-
-    // new data but that only covers ACT + ~ 100kms square
-    this.shapesLayerShape = createLayer('i5516 flats', '../assets/waterbodies/Canberra/i5516_flats.geojson');
-    this.shapesLayerShape = createLayer('i5516 pondages', '../assets/waterbodies/Canberra/i5516_pondageareas.geojson');
-    this.shapesLayerShape = createLayer('i5516 waterCourseLines', '../assets/waterbodies/Canberra/i5516_watercourselines.geojson',
-      {visible: false});
-    this.shapesLayerShape = createLayer('i5516 waterCourseAreas', '../assets/waterbodies/Canberra/i5516_watercourseareas.geojson');
-    this.shapesLayerShape = createLayer('i5516 lakes', '../assets/waterbodies/Canberra/i5516_waterholes.geojson');
-    this.shapesLayerShape = createLayer('i5516 reservoirs', '../assets/waterbodies/Canberra/i5516_reservoirs.geojson');
-  }
-
-  // Water Observations from Space 25m Filtered Summary (WOfS Filtered Statistics)
-  // http://terria-cube.terria.io/ > Add data > DEA Production > Water Observations from Space > All time summaries
-  // Discussed problem with rendering from DEA server with OpenDataCube slack group and worked out a solution.
-  // Feedback also was that https://ows.services.dea.ga.gov.au has caching but https://ows.dea.ga.gov.au doesn't.  Use the later.
-  private addGADEAWOFS() {
-    this.wofsWMS = new TileLayer({
-      opacity: 0.6,
-      source: new TileWMS({
-        url: 'https://ows.dea.ga.gov.au',
-        params: {
-          LAYERS: 'wofs_filtered_summary',
-          TILED: true
-        },
-        extent: [ -5687813.782846, 12530995.153909, -15894844.529378, 3585760.291316 ] // -13884991, -7455066, 2870341, 6338219]
-      })
-    });
-    this.wofsWMS.set('name', 'Water Observations from Space');  // 25m Filtered Summary (WOfS Filtered Statistics)');
-    this.map.addLayer(this.wofsWMS);
-    this.wofsWMS.setVisible(true);
-  }
-
-  private setupLayerSelectionMenu() {
-    const generateCheckbox = (idCheckbox, labelName, htmlElement) => {
-      const checkbox = this.document.createElement('input');
-      checkbox.type = 'checkbox';
-      checkbox.id = idCheckbox;
-      const label = this.document.createElement('label');
-      label.htmlFor = idCheckbox;
-      label.appendChild(this.document.createTextNode(labelName));
-      htmlElement.appendChild(checkbox);
-      htmlElement.appendChild(label);
-      return checkbox;
-    };
-
-    const layers = this.map.getLayers().getArray();
-    for (let i = layers.length - 1; i >= 0; i--) {
-      const layer = layers[i];
-      const layerId = 'layer_id_' + layers[i].get('id');
-      const name = layers[i].get('name');
-      const checkbox = generateCheckbox( i, name, this.document.querySelector('.layersSwitch'));
-
-      // Manage when checkbox is (un)checked
-      checkbox.addEventListener('change', function() {
-        if (this.checked !== layer.getVisible()) {
-          layer.setVisible(this.checked);
-        }
-      });
-
-      // Manage when layer visibility changes outside of this
-      layer.on('change:visible', function() {
-        if (this.getVisible() !== checkbox.checked) {
-          checkbox.checked = this.getVisible();
-        }
-      });
-
-      // Set state the first time
-      setTimeout(() => {
-        checkbox.checked = layer.getVisible();
-      }, 1000);
-    }
   }
 }

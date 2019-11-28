@@ -1,4 +1,5 @@
 import Overlay from 'ol/Overlay';
+import Map from 'ol/Map';
 import {
   printDetails,
   printStats,
@@ -22,7 +23,7 @@ export class Popup {
    * Create the map overlay.
    * @param elementId to draw into
    */
-  init() {
+  init(map: Map) {
     if (! this.popup) {
       this.popup = new Overlay({
         element: this.htmlDocument.getElementById(this.elementId),
@@ -31,10 +32,12 @@ export class Popup {
         autoPanMargin: 275,
         positioning: 'center-left'
       });
+      map.addOverlay(this.popup);
+      this.setupEventHandlers();
     }
   }
 
-  initEventHandlers() {
+  private setupEventHandlers() {
     // Popup dialog close button
     this.htmlDocument.getElementById(this.elementId).addEventListener('click', (event: Event) => {
       const element = (event.target as HTMLElement);
