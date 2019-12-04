@@ -80,6 +80,23 @@ export class Layers {
     this.shapesLayerShape = createLayer('i5516 waterCourseAreas', '../assets/waterbodies/Canberra/i5516_watercourseareas.geojson');
     this.shapesLayerShape = createLayer('i5516 lakes', '../assets/waterbodies/Canberra/i5516_waterholes.geojson');
     this.shapesLayerShape = createLayer('i5516 reservoirs', '../assets/waterbodies/Canberra/i5516_reservoirs.geojson');
+
+    // I tried this but i neeed help with ArcGIS server
+    /*import TileArcGISRest from 'ol/source/TileArcGISRest';
+      const layer = new TileLayer({
+      opacity: 0.6,
+      source: new TileArcGISRest({
+        url: 'http://services.ga.gov.au/gis/rest/services/NM_Hydrology_and_Marine_Points/MapServer',
+        params: {
+          LAYERS: 'Bores',
+          TILED: true
+        },
+        extent: [ -5687813.782846, 12530995.153909, -15894844.529378, 3585760.291316 ] // -13884991, -7455066, 2870341, 6338219]
+      })
+    });
+    layer.set('name', 'Bores');  // 25m Filtered Summary (WOfS Filtered Statistics)');
+    map.addLayer(layer);
+    layer.setVisible(true);*/
   }
 
   // Water Observations from Space 25m Filtered Summary (WOfS Filtered Statistics)
