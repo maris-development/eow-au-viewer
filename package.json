@@ -3,8 +3,9 @@
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve",
+    "start": "ng serve --host 0.0.0.0 --disableHostCheck",
     "build": "ng build --base-href http://research.csiro.au/eyeonwater/",
+    "deploy:csiro": "./deploy_csiro.sh",
     "test": "ng test",
     "lint": "ng lint",
     "e2e": "ng e2e"
@@ -19,9 +20,11 @@
     "@angular/platform-browser": "~8.2.11",
     "@angular/platform-browser-dynamic": "~8.2.11",
     "@angular/router": "~8.2.11",
+    "highcharts": "^7.2.1",
     "lodash": "^4.17.15",
     "luxon": "^1.19.3",
     "ol": "^6.0.1",
+    "rimraf": "^3.0.0",
     "rxjs": "~6.4.0",
     "tslib": "^1.10.0",
     "zone.js": "~0.9.1"

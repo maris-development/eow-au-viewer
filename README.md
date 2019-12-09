@@ -29,21 +29,10 @@ A simple viewer to visualize EOW:AU data.
 - To build production ready distribution run command
   - `npm run build`
   
-## Distribution (CSIRO)
+## Deploy (CSIRO)
 
     cd ng-eow  # this project
-    npm run build
-    rm dist.tgz
-    tar --directory=dist/ng-eow -czvf dist.tgz ./
-    scp dist.tgz <user>@research.csiro.au: /tmp
-    # type in password - alternatively setup up ssh public/private keys
-
-    ssh -t <user>@research.csiro.au "cd /srv/www/research.csiro.au/html/static/eyeonwater; exec $SHELL -l"
-    # type in password - alternatively setup up ssh public/private keys
-    research> # You should be in /srv/www/research.csiro.au/html/static/eyeonwater directory - MAKE SURE YOU ARE!
-    research> rm -rf *
-    research> cp /tmp/dist.tgz .
-    research> tar xzvf dist.tgz
+    npm run deploy
     # Open https://research.csiro.au/eyeonwater/observation/ in browswer
 
 # Development

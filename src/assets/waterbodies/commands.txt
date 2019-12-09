@@ -1,0 +1,10 @@
+  From https://developers.planet.com/planetschool/getting-started-with-gdal/
+
+  582  ogrinfo aus25wgd_l.shp
+  583  ogrinfo -so aus25wgd_l.shp aus25wgd_l
+  584  ogr2ogr --formats
+  585  ogr2ogr -f GeoJSON aus25wgd_l.geojson aus25wgd_l.shp
+  588  ogrinfo -so *geojson
+  589  ogrinfo -so *geojson aus25wgd_l
+  590  history
+

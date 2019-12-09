@@ -6,6 +6,7 @@ body,
   margin: 0px;
   font-family: Tahoma, Geneva, sans-serif;
   color: #777777;
+  background-color: #bebebe;
 }
 html {
   overflow-x: hidden;
@@ -29,8 +30,8 @@ html {
 
 .map {
   width: 100%;
-  height: 100vh;
-  /*background: #aad3df;*/
+  height: 95vh;
+  background: #aad3df;
 }
 
 #popup {
@@ -41,7 +42,7 @@ html {
 }
 
 #popup>div {
-  padding: 1em;
+  padding: 0.1em;
 }
 
 #popup.active {
@@ -73,6 +74,17 @@ html {
 .popup-item {
   padding: 0.5em;
   border: 1px solid #acacac
+}
+
+#pieChart .close {
+  float: right;
+  position: absolute;
+  top: 4px;
+  right: 8px;
+}
+
+#pieChart .close::before {
+  content: '\00d7'
 }
 
 .fu-preview {
@@ -275,4 +287,13 @@ li.item {
 }
 .measurement-item:hover{
   font-weight: bolder;
+}
+
+.layersSwitch {
+  position: absolute;
+  bottom: 20px;
+}
+
+.highcharts-background {
+  padding: 0;
 }
